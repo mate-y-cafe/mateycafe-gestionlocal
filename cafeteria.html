@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CULTIVO | Café de Especialidad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          espresso: '#4A2E23',
+          espressoLight: '#6B4226',
+          amber: '#BF6B2E',
+          amberLight: '#E3A85C',
+          cream: '#FBF4E8',
+          creamAlt: '#F4E6D0',
+          creamDark: '#E8CBA0',
+          clay: '#C89873',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          body: ['Manrope', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Manrope', sans-serif;
+    color: #4A2E23;
+    background-color: #F4E6D0;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(227,168,92,0.35), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(200,152,115,0.45), transparent 50%),
+      radial-gradient(circle at 75% 70%, rgba(191,107,46,0.22), transparent 45%),
+      radial-gradient(circle at 20% 80%, rgba(74,46,35,0.22), transparent 50%),
+      linear-gradient(160deg, #FBF4E8 0%, #F4E6D0 45%, #E8CBA0 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  h1, h2, h3, .font-display { font-family: 'Fraunces', serif; }
+  .blob { position: fixed; border-radius: 9999px; filter: blur(70px); z-index: 0; pointer-events: none; }
+  .glass {
+    background: rgba(251, 244, 232, 0.45);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(74, 46, 35, 0.14);
+  }
+  .glass-dark {
+    background: rgba(74, 46, 35, 0.88);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(251, 244, 232, 0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+  .glass-amber {
+    background: rgba(191, 107, 46, 0.35);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(251, 244, 232, 0.35);
+  }
+  .glass-card {
+    background: rgba(251, 244, 232, 0.55);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-5px);
+    background: rgba(251, 244, 232, 0.78);
+    box-shadow: 0 16px 40px rgba(74, 46, 35, 0.18);
+  }
+  .step-line {
+    background-image: repeating-linear-gradient(to right, rgba(251,244,232,0.7) 0, rgba(251,244,232,0.7) 8px, transparent 8px, transparent 16px);
+  }
+</style>
+</head>
+<body class="antialiased relative overflow-x-hidden">
+
+<div class="blob w-[28rem] h-[28rem] bg-amberLight/40 -top-24 -right-24"></div>
+<div class="blob w-[24rem] h-[24rem] bg-clay/50 top-1/3 -left-20"></div>
+<div class="blob w-[22rem] h-[22rem] bg-amber/25 bottom-0 right-1/4"></div>
+<div class="blob w-[20rem] h-[20rem] bg-espressoLight/15 top-[65%] -right-10"></div>
+
+<div class="relative z-10">
+
+<!-- NAV -->
+<header class="sticky top-3 z-40 px-3 sm:px-6 mt-3">
+  <nav class="max-w-7xl mx-auto glass rounded-full px-4 sm:px-6 py-3 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <span class="text-3xl">☕</span>
+      <div class="leading-none">
+        <span class="block font-display font-black text-lg sm:text-xl text-espresso tracking-wide">CULTIVO</span>
+        <span class="block text-[10px] uppercase tracking-widest text-espresso/70">Café de Especialidad</span>
+      </div>
+    </a>
+
+    <ul class="hidden lg:flex items-center gap-7 font-semibold text-sm text-espresso">
+      <li><a href="#nosotros" class="hover:text-amber transition-colors">Nosotros</a></li>
+      <li><a href="#proceso" class="hover:text-amber transition-colors">Proceso</a></li>
+      <li><a href="#metodos" class="hover:text-amber transition-colors">Métodos</a></li>
+      <li><a href="#menu" class="hover:text-amber transition-colors">Menú</a></li>
+      <li><a href="#tienda" class="hover:text-amber transition-colors">Tienda</a></li>
+      <li><a href="#contacto" class="hover:text-amber transition-colors">Contacto</a></li>
+    </ul>
+
+    <div class="hidden sm:flex items-center gap-2">
+      <a href="index.html" class="flex items-center gap-1.5 glass text-espresso px-3.5 py-2 rounded-full font-bold text-xs hover:bg-cream/60 transition-colors">
+        🧉 Mate y Café
+      </a>
+      <a href="#menu" class="flex items-center gap-2 glass-amber text-espresso px-4 py-2 rounded-full font-bold text-xs hover:bg-amber/40 transition-colors">
+        ☕ Ver Menú
+      </a>
+    </div>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section id="inicio" class="px-4 sm:px-6 py-16 sm:py-20">
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+    <div class="glass rounded-[2rem] p-8 sm:p-10">
+      <span class="inline-block glass-amber text-espresso font-bold text-xs uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+        🌱 De la finca a la taza
+      </span>
+      <h1 class="font-display font-black text-4xl sm:text-5xl lg:text-6xl text-espresso leading-[1.05] mb-6">
+        Café de especialidad y pastelería <span class="text-amber italic">de verdad</span>
+      </h1>
+      <p class="text-lg text-espresso/80 mb-8 max-w-xl leading-relaxed">
+        Granos de origen tostados en casa, medialunas recién horneadas y una carta pensada para quedarse. Este es nuestro rincón, sentate cuando quieras.
+      </p>
+      <div class="flex flex-wrap gap-4 mb-10">
+        <a href="#menu" class="inline-flex items-center gap-2 bg-amber/90 hover:bg-amber text-white font-bold px-7 py-3.5 rounded-full shadow-lg shadow-amber/30 border border-white/20 transition-all hover:-translate-y-0.5">
+          ☕ Ver el Menú
+        </a>
+        <a href="#contacto" class="inline-flex items-center gap-2 glass text-espresso hover:bg-cream/60 font-bold px-7 py-3.5 rounded-full transition-all hover:-translate-y-0.5">
+          📍 Cómo llegar
+        </a>
+      </div>
+
+      <div class="flex items-center gap-4 glass-card rounded-2xl p-4 max-w-md">
+        <div class="glass-dark text-cream rounded-xl p-3 shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        </div>
+        <div>
+          <p class="font-bold text-espresso text-sm">Visitanos en el local</p>
+          <p class="text-sm text-espresso/80">Av. Yerba Mate 1801, Palermo, CABA</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative">
+      <div class="aspect-square rounded-[2.5rem] overflow-hidden glass-amber">
+        <img src="images/cultivo/hero.jpg" alt="Café de especialidad CULTIVO" class="w-full h-full object-cover">
+      </div>
+      <div class="absolute -bottom-6 -left-6 glass-card rounded-2xl p-5 hidden sm:flex items-center gap-3">
+        <img src="images/cultivo/pasteleria.jpg" alt="Pastelería" class="w-12 h-12 rounded-xl object-cover">
+        <div>
+          <p class="font-display font-bold text-espresso leading-tight">Pastelería Fina</p>
+          <p class="text-xs text-espresso/70">Horneada todos los días</p>
+        </div>
+      </div>
+      <div class="absolute -top-6 -right-4 glass-dark text-cream rounded-2xl px-5 py-3 hidden sm:block">
+        <p class="font-display font-bold leading-tight">Tueste Propio</p>
+        <p class="text-xs text-cream/80">Origen seleccionado</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<section class="px-4 sm:px-6 pb-6">
+  <div class="max-w-7xl mx-auto glass-dark rounded-[2rem] px-6 sm:px-10 py-8 grid grid-cols-2 lg:grid-cols-4 gap-6 text-center text-cream">
+    <div>
+      <p class="font-display font-black text-3xl sm:text-4xl text-amberLight">12+</p>
+      <p class="text-xs sm:text-sm text-cream/70 mt-1">Orígenes en carta</p>
+    </div>
+    <div>
+      <p class="font-display font-black text-3xl sm:text-4xl text-amberLight">100%</p>
+      <p class="text-xs sm:text-sm text-cream/70 mt-1">Tueste artesanal propio</p>
+    </div>
+    <div>
+      <p class="font-display font-black text-3xl sm:text-4xl text-amberLight">5</p>
+      <p class="text-xs sm:text-sm text-cream/70 mt-1">Métodos de extracción</p>
+    </div>
+    <div>
+      <p class="font-display font-black text-3xl sm:text-4xl text-amberLight">8AM</p>
+      <p class="text-xs sm:text-sm text-cream/70 mt-1">Todos los días, sin excepción</p>
+    </div>
+  </div>
+</section>
+
+<!-- SOBRE NOSOTROS -->
+<section id="nosotros" class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+    <div>
+      <span class="text-amber font-bold text-xs uppercase tracking-[0.2em]">Nuestra historia</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-espresso mt-3 mb-6">Tostamos lo que servimos</h2>
+      <p class="text-espresso/80 leading-relaxed mb-4">
+        CULTIVO nació de una obsesión simple: que cada taza cuente el camino completo, desde el productor hasta la barra. Trabajamos directo con fincas de pequeña escala y tostamos en lotes cortos, varias veces por semana, para que el café que tomás hoy nunca tenga más de unos días de tostado.
+      </p>
+      <p class="text-espresso/80 leading-relaxed">
+        Lo mismo aplica a la cocina: pastelería de producción diaria, sin conservantes, pensada para acompañar — no competir con — la taza.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <img src="images/cultivo/granos-crudo.jpg" alt="Origen trazable" class="w-full h-28 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Origen trazable</h3>
+          <p class="text-sm text-espresso/70">Relación directa con productores de Brasil, Colombia y Perú.</p>
+        </div>
+      </div>
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <img src="images/cultivo/tueste.jpg" alt="Tueste en lotes cortos" class="w-full h-28 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Tueste en lotes cortos</h3>
+          <p class="text-sm text-espresso/70">Tostamos varias veces por semana, nunca stockeamos de más.</p>
+        </div>
+      </div>
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <img src="images/cultivo/barismo.jpg" alt="Barismo certificado" class="w-full h-28 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Barismo certificado</h3>
+          <p class="text-sm text-espresso/70">Equipo formado en extracción, latte art y catación.</p>
+        </div>
+      </div>
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <img src="images/cultivo/cocina.jpg" alt="Cocina propia" class="w-full h-28 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Cocina propia</h3>
+          <p class="text-sm text-espresso/70">Pastelería y salados horneados todos los días en el local.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESO: DEL GRANO A LA TAZA -->
+<section id="proceso" class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto glass-dark rounded-[2.5rem] p-8 sm:p-14">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <span class="text-amberLight font-bold text-xs uppercase tracking-[0.2em]">Cómo trabajamos</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-cream mt-3 mb-4">Del grano a la taza</h2>
+      <p class="text-cream/70">Cuatro pasos, siempre los mismos, para que la calidad no dependa del día.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+      <div class="hidden lg:block absolute top-10 left-[12%] right-[12%] h-0.5 step-line"></div>
+
+      <div class="relative glass rounded-2xl p-6 text-center hover:bg-cream/40 transition-colors">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full glass-amber text-cream font-display font-black text-lg flex items-center justify-center relative z-10">01</div>
+        <img src="images/cultivo/granos-crudo.jpg" alt="Selección de origen" class="w-12 h-12 mx-auto mb-2 rounded-full object-cover border-2 border-cream/40">
+        <h3 class="font-display font-bold text-cream mb-1">Selección de origen</h3>
+        <p class="text-sm text-cream/70">Compra directa a productores, por variedad y altura.</p>
+      </div>
+
+      <div class="relative glass rounded-2xl p-6 text-center hover:bg-cream/40 transition-colors">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full glass-amber text-cream font-display font-black text-lg flex items-center justify-center relative z-10">02</div>
+        <img src="images/cultivo/tueste.jpg" alt="Tueste artesanal" class="w-12 h-12 mx-auto mb-2 rounded-full object-cover border-2 border-cream/40">
+        <h3 class="font-display font-bold text-cream mb-1">Tueste artesanal</h3>
+        <p class="text-sm text-cream/70">Curvas propias por lote, en tostadora de tambor.</p>
+      </div>
+
+      <div class="relative glass rounded-2xl p-6 text-center hover:bg-cream/40 transition-colors">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full glass-amber text-cream font-display font-black text-lg flex items-center justify-center relative z-10">03</div>
+        <img src="images/cultivo/molienda.jpg" alt="Molienda a pedido" class="w-12 h-12 mx-auto mb-2 rounded-full object-cover border-2 border-cream/40">
+        <h3 class="font-display font-bold text-cream mb-1">Molienda a pedido</h3>
+        <p class="text-sm text-cream/70">Se muele al momento, según el método que elijas.</p>
+      </div>
+
+      <div class="relative glass rounded-2xl p-6 text-center hover:bg-cream/40 transition-colors">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full glass-amber text-cream font-display font-black text-lg flex items-center justify-center relative z-10">04</div>
+        <img src="images/cultivo/espresso.jpg" alt="Extracción en barra" class="w-12 h-12 mx-auto mb-2 rounded-full object-cover border-2 border-cream/40">
+        <h3 class="font-display font-bold text-cream mb-1">Extracción en barra</h3>
+        <p class="text-sm text-cream/70">Parámetros medidos, taza a taza, por nuestros baristas.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METODOS DE PREPARACION -->
+<section id="metodos" class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="text-amber font-bold text-xs uppercase tracking-[0.2em]">Elegí tu método</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-espresso mt-3 mb-4">Métodos de Preparación</h2>
+      <p class="text-espresso/70">Pedilo en barra y te lo preparamos en el momento, con el grano de la semana.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="glass-card rounded-[1.5rem] overflow-hidden text-center">
+        <img src="images/cultivo/espresso.jpg" alt="Espresso" class="w-full h-32 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Espresso</h3>
+          <p class="text-sm text-espresso/70 mb-4">Intenso y concentrado, base de nuestra carta de café con leche.</p>
+          <span class="font-display font-black text-amber">$2.200</span>
+        </div>
+      </div>
+      <div class="glass-card rounded-[1.5rem] overflow-hidden text-center">
+        <img src="images/cultivo/v60.jpg" alt="V60 Filtrado" class="w-full h-32 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">V60 (Filtrado)</h3>
+          <p class="text-sm text-espresso/70 mb-4">Taza limpia y aromática, resalta las notas del origen.</p>
+          <span class="font-display font-black text-amber">$3.200</span>
+        </div>
+      </div>
+      <div class="glass-card rounded-[1.5rem] overflow-hidden text-center">
+        <img src="images/cultivo/prensa-francesa.jpg" alt="Prensa Francesa" class="w-full h-32 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Prensa Francesa</h3>
+          <p class="text-sm text-espresso/70 mb-4">Cuerpo untuoso, ideal para compartir en la mesa.</p>
+          <span class="font-display font-black text-amber">$3.400</span>
+        </div>
+      </div>
+      <div class="glass-card rounded-[1.5rem] overflow-hidden text-center">
+        <img src="images/cultivo/cold-brew.jpg" alt="Cold Brew" class="w-full h-32 object-cover">
+        <div class="p-6">
+          <h3 class="font-display font-bold text-espresso mb-1">Cold Brew</h3>
+          <p class="text-sm text-espresso/70 mb-4">Extracción en frío 12hs, dulce y suave, servido con hielo.</p>
+          <span class="font-display font-black text-amber">$3.400</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu" class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="text-amber font-bold text-xs uppercase tracking-[0.2em]">Gastronomía en el local</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-espresso mt-3 mb-4">Nuestro Menú</h2>
+      <p class="text-espresso/70">Café de especialidad, pastelería fina y salados recién hechos.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Panel 1 -->
+      <div class="glass-card rounded-[2rem] p-8 sm:p-10">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="text-2xl">☕</span>
+          <h3 class="font-display font-bold text-xl text-espresso">Café de Especialidad</h3>
+        </div>
+        <ul class="space-y-5">
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Espresso de origen</p><p class="text-sm text-espresso/60">Grano single origin, tueste claro</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$2.200</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Flat White</p><p class="text-sm text-espresso/60">Doble shot, leche vaporizada sedosa</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$3.100</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Cold Brew 12hs</p><p class="text-sm text-espresso/60">Extracción en frío, notas dulces</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$3.400</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Té de hebras premium</p><p class="text-sm text-espresso/60">Selección orgánica, blend de la casa</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$2.600</span>
+          </li>
+          <li class="flex justify-between gap-4 pb-3">
+            <div><p class="font-semibold text-espresso">Chocolate Caliente Artesanal</p><p class="text-sm text-espresso/60">Cacao 70%, espuma de leche</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$3.300</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Panel 2 -->
+      <div class="glass-card rounded-[2rem] p-8 sm:p-10">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="text-2xl">🥐</span>
+          <h3 class="font-display font-bold text-xl text-espresso">Pastelería &amp; Salados</h3>
+        </div>
+        <ul class="space-y-5">
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Medialunas de manteca (x2)</p><p class="text-sm text-espresso/60">Horneadas todas las mañanas</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$1.900</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Tostado de jamón crudo y queso</p><p class="text-sm text-espresso/60">Pan de campo, rúcula</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$4.500</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Scon de queso y romero</p><p class="text-sm text-espresso/60">Recién horneado</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$2.100</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Budín de naranja y almendras</p><p class="text-sm text-espresso/60">Porción casera</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$2.800</span>
+          </li>
+          <li class="flex justify-between gap-4 border-b border-dashed border-espresso/25 pb-3">
+            <div><p class="font-semibold text-espresso">Cheesecake de frutos rojos</p><p class="text-sm text-espresso/60">Porción individual</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$3.900</span>
+          </li>
+          <li class="flex justify-between gap-4 pb-3">
+            <div><p class="font-semibold text-espresso">Tabla de fiambres &amp; quesos</p><p class="text-sm text-espresso/60">Ideal para compartir</p></div>
+            <span class="font-display font-bold text-amber shrink-0">$8.500</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="text-amber font-bold text-xs uppercase tracking-[0.2em]">Lo que dicen</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-espresso mt-3 mb-4">Clientes de todos los días</h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="glass-card rounded-2xl p-6">
+        <div class="text-amber mb-3">★★★★★</div>
+        <p class="text-espresso/80 text-sm leading-relaxed mb-4">"El mejor flat white del barrio, sin dudarlo. Vengo todos los días antes de entrar a laburar."</p>
+        <p class="font-display font-bold text-espresso text-sm">— Martina R.</p>
+      </div>
+      <div class="glass-card rounded-2xl p-6">
+        <div class="text-amber mb-3">★★★★★</div>
+        <p class="text-espresso/80 text-sm leading-relaxed mb-4">"Se nota que tuestan ellos mismos, el café tiene otro perfil. Las medialunas también son un golazo."</p>
+        <p class="font-display font-bold text-espresso text-sm">— Federico L.</p>
+      </div>
+      <div class="glass-card rounded-2xl p-6">
+        <div class="text-amber mb-3">★★★★★</div>
+        <p class="text-espresso/80 text-sm leading-relaxed mb-4">"Pedí el V60 y me explicaron todo el proceso del grano. Ese detalle hace la diferencia."</p>
+        <p class="font-display font-bold text-espresso text-sm">— Sol A.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIENDA DE INSUMOS -->
+<section id="tienda" class="py-16 sm:py-24 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-14">
+      <span class="text-amber font-bold text-xs uppercase tracking-[0.2em]">Llevate el café a tu casa</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-espresso mt-3 mb-4">Tienda de Insumos</h2>
+      <p class="text-espresso/70">Grano recién tostado, molido y los accesorios para prepararlo como en la barra. Consultanos en el local o por WhatsApp.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div data-sku="cafe-brasil-santos-500g" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/grano-bolsa-1.jpg" alt="Café en grano Brasil Santos" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Grano</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Brasil Santos 500g</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Notas a chocolate y frutos secos, tueste medio.</p>
+          <span class="font-display font-black text-base text-espresso">$9.800</span>
+        </div>
+      </div>
+      <div data-sku="cafe-colombia-huila-500g" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/grano-bolsa-2.jpg" alt="Café en grano Colombia Huila" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Grano</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Colombia Huila 500g</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Perfil cítrico y floral, tueste claro.</p>
+          <span class="font-display font-black text-base text-espresso">$10.500</span>
+        </div>
+      </div>
+      <div data-sku="cafe-blend-casa-250g" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/molido-bolsa.jpg" alt="Café molido blend de la casa" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Molido</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Blend de la Casa 250g</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Molienda media, ideal para cafetera de filtro.</p>
+          <span class="font-display font-black text-base text-espresso">$6.200</span>
+        </div>
+      </div>
+      <div data-sku="capsulas-compostables-x10" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/capsulas.jpg" alt="Cápsulas de café compostables" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Cápsulas</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Cápsulas Compostables x10</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Compatibles con cafeteras estándar, sin aluminio.</p>
+          <span class="font-display font-black text-base text-espresso">$5.400</span>
+        </div>
+      </div>
+      <div data-sku="filtros-v60-x40" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/filtros-v60.jpg" alt="Filtros de papel V60" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Accesorio</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Filtros V60 Papel x40</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Filtros cónicos sin blanquear, caja x40.</p>
+          <span class="font-display font-black text-base text-espresso">$3.100</span>
+        </div>
+      </div>
+      <div data-sku="prensa-francesa-350ml" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/prensa-francesa.jpg" alt="Prensa francesa 350ml" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Accesorio</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Prensa Francesa 350ml</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Vaso de vidrio borosilicato, filtro de acero.</p>
+          <span class="font-display font-black text-base text-espresso">$14.900</span>
+        </div>
+      </div>
+      <div data-sku="molinillo-manual-acero" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/molienda.jpg" alt="Molinillo manual de acero" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Accesorio</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Molinillo Manual de Acero</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Muelas cónicas ajustables, cuerpo de acero inoxidable.</p>
+          <span class="font-display font-black text-base text-espresso">$18.300</span>
+        </div>
+      </div>
+      <div data-sku="kit-pour-over" class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col">
+        <img src="images/cultivo/kit-pourover.jpg" alt="Kit pour over completo" class="h-40 w-full object-cover" loading="lazy">
+        <div class="p-5 flex flex-col flex-1">
+          <span class="self-start text-[10px] font-bold uppercase text-espresso glass-amber px-2.5 py-1 rounded-full mb-2">Kit</span>
+          <h3 class="font-display font-bold text-espresso text-base mb-1">Kit Pour Over Completo</h3>
+          <p class="text-xs text-espresso/70 mb-4 flex-1">Dripper V60, filtros y jarra de vidrio.</p>
+          <span class="font-display font-black text-base text-espresso">$21.500</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contacto" class="px-4 sm:px-6 pb-8 pt-4">
+  <div class="max-w-7xl mx-auto glass-dark rounded-[2.5rem] text-cream/90 pt-14 pb-8 px-6 sm:px-10">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+      <div>
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-3xl">☕</span>
+          <span class="font-display font-black text-xl text-cream tracking-wide">CULTIVO</span>
+        </div>
+        <p class="text-sm text-cream/60 leading-relaxed">Café de especialidad y pastelería artesanal. De la finca a la taza.</p>
+      </div>
+
+      <div>
+        <h4 class="font-display font-bold text-cream mb-4">Horarios</h4>
+        <ul class="text-sm text-cream/60 space-y-2">
+          <li class="flex justify-between gap-4"><span>Lunes a Viernes</span><span>8:00 – 21:00</span></li>
+          <li class="flex justify-between gap-4"><span>Sábados</span><span>9:00 – 22:00</span></li>
+          <li class="flex justify-between gap-4"><span>Domingos</span><span>9:00 – 20:00</span></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-display font-bold text-cream mb-4">Ubicación</h4>
+        <p class="text-sm text-cream/60 leading-relaxed mb-3">Av. Yerba Mate 1801<br>Palermo, CABA, Argentina</p>
+        <a href="https://wa.me/5491100000000" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-sm font-semibold text-amberLight hover:text-cream transition-colors">
+          💬 WhatsApp: +54 9 11 0000-0000
+        </a>
+      </div>
+
+      <div>
+        <h4 class="font-display font-bold text-cream mb-4">Seguinos</h4>
+        <div class="flex gap-3">
+          <a href="#" aria-label="Instagram" class="w-10 h-10 rounded-full glass flex items-center justify-center text-cream hover:bg-amber/40 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          </a>
+          <a href="#" aria-label="Facebook" class="w-10 h-10 rounded-full glass flex items-center justify-center text-cream hover:bg-amber/40 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+          </a>
+          <a href="https://wa.me/5491100000000" target="_blank" rel="noopener" aria-label="WhatsApp" class="w-10 h-10 rounded-full glass flex items-center justify-center text-cream hover:bg-amber/40 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-6 border-t border-cream/15 text-center text-xs text-cream/50">
+      © 2026 CULTIVO. Todos los derechos reservados.
+    </div>
+  </div>
+</footer>
+
+</div>
+
+<script src="js/disponibilidad.js"></script>
+<script>Disponibilidad.ready.then(() => Disponibilidad.marcarTarjetas());</script>
+</body>
+</html>

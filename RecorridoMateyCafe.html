@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+<style>html,body{margin:0;padding:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>Recorrido Virtual Mate &amp; Café</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@300;400;500;600;700&display=swap">
+<style>
+/* ============================================================
+   MATE & CAFÉ — Recorrido virtual interactivo
+   Identidad: papel de recetario cálido + verde yerba + cuero.
+   Mundo visual único y claro (se pinta todo explícitamente).
+   ============================================================ */
+:root{
+  --crema:#FDFBF7;
+  --crema-2:#EFEAE1;
+  --crema-3:#E4DCCF;
+  --madera:#C8B29B;
+  --madera-osc:#A98D74;
+  --cafe:#5C4033;
+  --cafe-cl:#7A5A48;
+  --yerba:#3B5E2B;
+  --yerba-cl:#8BA870;
+  --acero:#8A8F92;
+  --cuero:#9C6B43;
+  --tinta:#2E241D;
+  --tinta-sv:#6B5A4E;
+  --linea:#DCD2C4;
+  --font-d:"Fraunces",Georgia,"Times New Roman",serif;
+  --font-b:"Karla",system-ui,"Segoe UI",sans-serif;
+  --r:4px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--crema);color:var(--tinta);
+  font-family:var(--font-b);font-size:15px;line-height:1.55;overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--yerba);outline-offset:2px}
+
+.app{position:fixed;inset:0;display:flex;flex-direction:column;
+  background:radial-gradient(120% 90% at 50% 8%, #FFFFFF 0%, var(--crema) 45%, var(--crema-2) 100%)}
+
+.paper{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:.3;
+  background-image:linear-gradient(var(--linea) 1px,transparent 1px),linear-gradient(90deg,var(--linea) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(78% 68% at 50% 46%,#000 10%,transparent 100%)}
+
+/* ---------- topbar ---------- */
+.topbar{position:relative;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:11px 18px;border-bottom:1px solid var(--linea);
+  background:linear-gradient(180deg,rgba(253,251,247,.96),rgba(253,251,247,.72));backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto;min-width:0}
+.brand .mark{width:34px;height:34px;flex:none}
+.brand b{font-family:var(--font-d);font-weight:600;font-size:17px;letter-spacing:-.01em;display:block;line-height:1.1}
+.brand span{display:block;font-size:9.5px;letter-spacing:.26em;color:var(--tinta-sv);text-transform:uppercase;margin-top:2px}
+
+.seg{display:flex;border:1px solid var(--linea);border-radius:999px;overflow:hidden;background:#fff}
+.seg button{padding:9px 16px;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;color:var(--tinta-sv);
+  transition:background .18s,color .18s}
+.seg button+button{border-left:1px solid var(--linea)}
+.seg button[aria-pressed="true"]{background:var(--yerba);color:#fff}
+.seg button:hover:not([aria-pressed="true"]){background:var(--crema-2);color:var(--cafe)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+  padding:13px 22px;border:1px solid var(--linea);border-radius:999px;background:#fff;color:var(--cafe);
+  transition:border-color .2s,background .2s,transform .12s,color .2s,box-shadow .2s;min-height:44px}
+.btn:hover{border-color:var(--yerba);color:var(--yerba);box-shadow:0 3px 0 0 rgba(59,94,43,.12)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--yerba);border-color:var(--yerba);color:#fff}
+.btn.primary:hover{background:#2F4C22;border-color:#2F4C22;color:#fff}
+.btn.mate{background:var(--cuero);border-color:var(--cuero);color:#fff}
+.btn.mate:hover{background:#85572F;border-color:#85572F;color:#fff}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.35;pointer-events:none}
+
+/* ---------- stage ---------- */
+.stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab}
+.stage.dragging{cursor:grabbing}
+.viewport{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#map{width:100%;height:100%;transform-origin:center center;will-change:transform}
+#map svg{width:100%;height:100%;display:block;overflow:visible}
+
+.zoomer{position:absolute;right:16px;bottom:16px;z-index:20;display:flex;flex-direction:column;gap:7px}
+.zoomer button{width:40px;height:40px;border:1px solid var(--linea);border-radius:50%;background:#fff;
+  font-size:16px;color:var(--tinta-sv);box-shadow:0 2px 8px -4px rgba(46,36,29,.4)}
+.zoomer button:hover{color:var(--yerba);border-color:var(--yerba)}
+.hint{position:absolute;left:18px;bottom:16px;z-index:20;font-size:11px;letter-spacing:.08em;
+  color:var(--tinta-sv);text-transform:uppercase;pointer-events:none}
+
+/* ---------- zonas ---------- */
+.room{cursor:pointer;transition:transform .22s cubic-bezier(.2,.7,.3,1)}
+.room .floor{transition:fill .2s,stroke .2s}
+.room .glow{opacity:0;transition:opacity .22s}
+.room .chip{opacity:0;transform:translateY(3px);transition:opacity .2s,transform .2s}
+.room:hover,.room.hot{transform:translate(var(--cx),var(--cy)) scale(1.022) translate(calc(-1 * var(--cx)),calc(-1 * var(--cy)))}
+.room:hover .glow,.room.hot .glow{opacity:1}
+.room:hover .chip,.room.hot .chip{opacity:1;transform:translateY(0)}
+.room.dim{opacity:.62}
+.rlabel{font-family:var(--font-d);font-weight:600;fill:var(--tinta);font-size:3.5px;
+  pointer-events:none;paint-order:stroke;stroke:#FDFBF7;stroke-width:1.1px;stroke-linejoin:round}
+.rsub{font-family:var(--font-b);letter-spacing:.18em;fill:var(--tinta-sv);font-size:1.9px;text-transform:uppercase;
+  pointer-events:none;paint-order:stroke;stroke:#FDFBF7;stroke-width:.8px;stroke-linejoin:round}
+.chiptext{font-family:var(--font-b);font-weight:700;letter-spacing:.12em;fill:#fff;font-size:1.85px;pointer-events:none}
+.dimtext{font-family:var(--font-b);fill:var(--tinta-sv);font-size:1.5px;letter-spacing:.06em;
+  text-transform:uppercase;pointer-events:none;opacity:.72}
+
+/* ---------- rail ---------- */
+.rail{position:relative;z-index:30;border-top:1px solid var(--linea);background:rgba(253,251,247,.94);backdrop-filter:blur(6px);
+  padding:11px 16px;display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.step{display:flex;align-items:center;gap:9px;padding:7px 13px;border-radius:999px;flex:none;
+  border:1px solid transparent;transition:border-color .2s,background .2s;min-height:40px}
+.step:hover{background:var(--crema-2);border-color:var(--linea)}
+.step .dot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--madera-osc);flex:none}
+.step .num{font-family:var(--font-d);font-size:11px;color:var(--tinta-sv);font-variant-numeric:tabular-nums}
+.step .nm{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--tinta-sv);white-space:nowrap}
+.step.done .dot{background:var(--madera);border-color:var(--madera-osc)}
+.step.skipped .dot{border-color:var(--cuero);background:transparent}
+.step.cur .dot{background:var(--yerba);border-color:var(--yerba);box-shadow:0 0 0 4px rgba(59,94,43,.15)}
+.step.cur .nm,.step.cur .num{color:var(--yerba)}
+.rail .sep{width:16px;height:1px;background:var(--linea);flex:none}
+
+/* ---------- tarjeta guiada ---------- */
+.tourcard{position:absolute;left:18px;top:18px;z-index:25;width:min(340px,calc(100vw - 36px));
+  border:1px solid var(--linea);border-radius:14px;background:#fff;padding:20px;
+  box-shadow:0 26px 48px -34px rgba(46,36,29,.55);animation:slideIn .35s cubic-bezier(.2,.7,.3,1) both}
+.tourcard .eyebrow{display:flex;align-items:baseline;gap:11px;margin-bottom:6px}
+.tourcard .big{font-family:var(--font-d);font-size:34px;font-weight:600;color:var(--yerba);line-height:1;font-variant-numeric:tabular-nums}
+.tourcard .of{font-size:10px;letter-spacing:.22em;color:var(--tinta-sv);text-transform:uppercase}
+.tourcard h3{font-family:var(--font-d);font-size:21px;font-weight:600;margin:0 0 7px;line-height:1.15;text-wrap:balance}
+.tourcard p{margin:0 0 16px;font-size:14px;color:var(--tinta-sv);line-height:1.55}
+.tourcard .acts{display:flex;gap:8px;flex-wrap:wrap}
+.tourcard .acts .btn{padding:11px 16px;font-size:11px}
+@keyframes slideIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+
+/* ---------- interior ---------- */
+.interior{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;background:var(--crema)}
+.interior.open{display:flex}
+.interior .render{position:relative;flex:1 1 70%;min-height:0;overflow:hidden;background:var(--crema-2)}
+.interior .render svg{width:100%;height:100%;display:block}
+.badge{position:absolute;left:18px;top:16px;z-index:3;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--tinta-sv);border:1px solid var(--linea);padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.86)}
+.interior .meta{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:24px 24px 20px;
+  background:linear-gradient(0deg,var(--crema) 30%,rgba(253,251,247,.85) 62%,transparent 100%)}
+.interior .meta .idx{font-size:10px;letter-spacing:.26em;color:var(--yerba);text-transform:uppercase;display:block;margin-bottom:7px;font-weight:700}
+.interior h2{font-family:var(--font-d);font-weight:600;font-size:clamp(25px,4.2vw,44px);margin:0 0 9px;line-height:1.02;text-wrap:balance}
+.interior .desc{max-width:62ch;color:var(--tinta-sv);font-size:15.5px;margin:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:15px}
+.tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;color:var(--cafe);
+  border:1px solid var(--linea);padding:6px 11px;border-radius:999px;background:#fff}
+.interior .bar{flex:none;display:flex;gap:9px;padding:13px 16px;border-top:1px solid var(--linea);
+  background:#fff;flex-wrap:wrap;align-items:center}
+.interior .bar .spacer{flex:1}
+
+/* ---------- intro ---------- */
+.intro{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:26px;
+  background:radial-gradient(110% 80% at 50% 12%,#FFFFFF 0%,var(--crema) 50%,var(--crema-2) 100%)}
+.intro.hide{animation:fadeOut .6s ease forwards;pointer-events:none}
+@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+.intro .bg{position:absolute;inset:0;opacity:.34;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.intro .bg svg{width:min(1500px,155%);height:auto}
+.intro .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(253,251,247,.62),rgba(253,251,247,.94))}
+.intro .inner{position:relative;text-align:center;max-width:780px}
+.intro .kicker{font-size:10.5px;letter-spacing:.38em;color:var(--yerba);text-transform:uppercase;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:24px}
+.intro .kicker::before,.intro .kicker::after{content:"";width:40px;height:1px;background:var(--yerba-cl)}
+.intro h1{font-family:var(--font-d);font-weight:600;font-size:clamp(32px,6.4vw,70px);line-height:1;margin:0 0 18px;text-wrap:balance}
+.intro h1 em{font-style:italic;color:var(--yerba)}
+.intro .sub{color:var(--tinta-sv);font-size:clamp(15px,2.1vw,19px);margin:0 auto 32px;max-width:46ch;font-weight:400}
+.intro .acts{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+.intro .foot{margin-top:36px;display:flex;gap:24px;justify-content:center;flex-wrap:wrap;
+  font-size:10px;letter-spacing:.18em;color:var(--tinta-sv);text-transform:uppercase;font-weight:600}
+.intro .foot span{display:flex;align-items:center;gap:8px}
+.intro .foot i{width:5px;height:5px;background:var(--yerba-cl);display:block;border-radius:50%}
+.rise{animation:rise .7s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- final ---------- */
+.endcard{position:absolute;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:24px;
+  background:rgba(253,251,247,.9);backdrop-filter:blur(5px)}
+.endcard.open{display:flex}
+.endcard .box{max-width:470px;text-align:center;border:1px solid var(--linea);border-radius:16px;background:#fff;
+  padding:34px 30px;animation:rise .45s both;box-shadow:0 30px 60px -40px rgba(46,36,29,.5)}
+.endcard h3{font-family:var(--font-d);font-size:25px;font-weight:600;margin:0 0 10px}
+.endcard p{color:var(--tinta-sv);margin:0 0 22px}
+.endcard .acts{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+
+/* ============ ARMÁ TU MATE ============ */
+.builder{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;background:var(--crema)}
+.builder.open{display:flex}
+.bhead{flex:none;display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--linea);background:#fff;flex-wrap:wrap}
+.bhead h2{font-family:var(--font-d);font-size:19px;font-weight:600;margin:0;margin-right:auto}
+.bhead .close{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--tinta-sv);padding:10px 14px;border-radius:999px}
+.bhead .close:hover{background:var(--crema-2);color:var(--cafe)}
+.bsteps{flex:none;display:flex;gap:0;padding:0 18px;border-bottom:1px solid var(--linea);background:#fff;overflow-x:auto;scrollbar-width:none}
+.bsteps::-webkit-scrollbar{display:none}
+.bstep{display:flex;align-items:center;gap:9px;padding:13px 16px;border-bottom:2px solid transparent;flex:none;
+  color:var(--tinta-sv);transition:color .2s,border-color .2s}
+.bstep b{font-family:var(--font-d);font-size:14px;font-variant-numeric:tabular-nums}
+.bstep span{font-size:11px;letter-spacing:.11em;text-transform:uppercase;font-weight:600;white-space:nowrap}
+.bstep.done{color:var(--madera-osc)}
+.bstep.cur{color:var(--yerba);border-color:var(--yerba)}
+.bbody{flex:1;min-height:0;display:grid;grid-template-columns:1.05fr .95fr;gap:0}
+.bpreview{position:relative;background:linear-gradient(160deg,#fff,var(--crema-2));border-right:1px solid var(--linea);
+  display:flex;align-items:center;justify-content:center;padding:22px;min-height:0}
+.bpreview svg{width:100%;height:100%;max-height:100%;display:block}
+.bpanel{overflow-y:auto;padding:26px 26px 30px}
+.bpanel .lead{font-family:var(--font-d);font-size:26px;font-weight:600;margin:0 0 5px;line-height:1.1}
+.bpanel .say{color:var(--tinta-sv);margin:0 0 20px;font-size:14.5px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:14px;align-items:flex-start;text-align:left;width:100%;
+  border:1px solid var(--linea);border-radius:12px;background:#fff;padding:14px 16px;transition:border-color .18s,background .18s,transform .12s}
+.opt:hover{border-color:var(--yerba-cl);background:#fff;transform:translateX(2px)}
+.opt[aria-pressed="true"]{border-color:var(--yerba);background:rgba(139,168,112,.1)}
+.opt .sw{width:38px;height:38px;border-radius:9px;flex:none;border:1px solid rgba(46,36,29,.14)}
+.opt .tx b{display:block;font-family:var(--font-d);font-size:16px;font-weight:600;line-height:1.2}
+.opt .tx small{display:block;color:var(--tinta-sv);font-size:12.5px;margin-top:3px;line-height:1.4}
+.bfoot{flex:none;display:flex;gap:9px;align-items:center;padding:13px 18px;border-top:1px solid var(--linea);background:#fff;flex-wrap:wrap}
+.bfoot .spacer{flex:1}
+.resume{border:1px dashed var(--madera-osc);border-radius:12px;padding:16px 18px;background:rgba(200,178,155,.12);margin-top:4px}
+.resume h4{font-family:var(--font-d);font-size:17px;font-weight:600;margin:0 0 12px}
+.resume dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:14px}
+.resume dt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-sv);font-weight:700;padding-top:3px}
+.resume dd{margin:0;font-weight:600;color:var(--cafe)}
+.resume .none{color:var(--tinta-sv);font-weight:400}
+
+/* ---------- responsive ---------- */
+@media (max-width:940px){ .bbody{grid-template-columns:1fr;grid-template-rows:minmax(210px,38%) 1fr}
+  .bpreview{border-right:none;border-bottom:1px solid var(--linea);padding:14px} }
+@media (max-width:820px){
+  .brand span{display:none}
+  .topbar{padding:9px 12px;gap:8px}
+  .tourcard{left:10px;right:10px;top:10px;width:auto;padding:16px}
+  .tourcard .big{font-size:28px}
+  .hint{display:none}
+  .interior{overflow-y:auto}
+  .interior .render{flex:0 0 auto;display:block;padding:46px 0 6px;min-height:0;background:var(--crema)}
+  .interior .render svg{width:100%;height:auto;display:block;aspect-ratio:1200 / 720}
+  .interior .meta{position:static;background:none;padding:8px 15px 18px}
+  .interior .bar{position:sticky;bottom:0;padding:11px 12px}
+  .interior .bar .btn{flex:1 1 46%;padding:13px 10px;font-size:10.5px;letter-spacing:.08em}
+  .interior .bar .spacer{display:none}
+  .bpanel{padding:18px 16px 24px}
+  .bfoot .btn{flex:1 1 46%}
+  .rail{padding:9px 12px}
+}
+@media (max-width:520px){
+  .step .nm{display:none}
+  .step{padding:8px 10px}
+  .intro .foot{display:none}
+  .intro .acts .btn{width:100%}
+  .bstep span{display:none}
+}
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important} }
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 44 44" aria-hidden="true">
+        <circle cx="22" cy="22" r="20" fill="none" stroke="#3B5E2B" stroke-width="1.4"/>
+        <path d="M13 20 q9 -5 18 0 q0 12 -9 15 q-9 -3 -9 -15 Z" fill="#5C4033"/>
+        <path d="M13 20 q9 -5 18 0" fill="none" stroke="#C8B29B" stroke-width="1.6"/>
+        <path d="M27 19 L33 8" stroke="#8A8F92" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="22" cy="24" r="4" fill="#8BA870"/>
+      </svg>
+      <div>
+        <b>Mate &amp; Café</b>
+        <span>Recorrido virtual</span>
+      </div>
+    </div>
+    <button class="btn mate" id="openBuilderTop">Armá tu mate</button>
+    <div class="seg" role="group" aria-label="Modo de recorrido">
+      <button id="mGuided" aria-pressed="true">Guiado</button>
+      <button id="mFree" aria-pressed="false">Libre</button>
+    </div>
+    <div class="seg" role="group" aria-label="Vista del plano">
+      <button id="v2d" aria-pressed="false">2D</button>
+      <button id="v3d" aria-pressed="true">3D</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage">
+    <div class="viewport"><div id="map"></div></div>
+
+    <div class="tourcard" id="tourcard" hidden>
+      <div class="eyebrow"><span class="big" id="tcNum">01</span><span class="of" id="tcOf">Etapa 1 de 4</span></div>
+      <h3 id="tcName">Zona</h3>
+      <p id="tcDesc">Descripción</p>
+      <div class="acts">
+        <button class="btn primary" id="tcEnter">Entrar</button>
+        <button class="btn ghost" id="tcPrev">Atrás</button>
+        <button class="btn ghost" id="tcSkip">Saltar</button>
+      </div>
+    </div>
+
+    <div class="zoomer">
+      <button id="zIn" title="Acercar" aria-label="Acercar">+</button>
+      <button id="zOut" title="Alejar" aria-label="Alejar">−</button>
+      <button id="zRst" title="Centrar" aria-label="Centrar">◎</button>
+    </div>
+    <p class="hint">Pasá el cursor por una zona y hacé clic para entrar · Arrastrá para desplazar · Rueda para zoom</p>
+
+    <div class="endcard" id="endcard">
+      <div class="box">
+        <h3>Ya conocés todo el local</h3>
+        <p>Recorriste las cuatro zonas de Mate &amp; Café. Podés repetir el recorrido, explorar libremente o armar tu mate paso a paso.</p>
+        <div class="acts">
+          <button class="btn mate" id="ecBuild">Armá tu mate</button>
+          <button class="btn" id="ecRestart">Repetir recorrido</button>
+          <button class="btn ghost" id="ecFree">Explorar libremente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="rail" id="rail" aria-label="Progreso del recorrido"></nav>
+</div>
+
+<div class="paper" aria-hidden="true"></div>
+
+<!-- ================= INTERIOR ================= -->
+<section class="interior" id="interior" aria-modal="true" role="dialog">
+  <div class="render" id="render">
+    <span class="badge">Render de demostración · ilustración</span>
+    <div class="meta">
+      <span class="idx" id="inIdx">Zona 01</span>
+      <h2 id="inTitle">Título</h2>
+      <p class="desc" id="inDesc">Descripción</p>
+      <div class="tags" id="inTags"></div>
+    </div>
+  </div>
+  <div class="bar">
+    <button class="btn" id="inBack">← Volver al mapa</button>
+    <button class="btn mate" id="inCta" hidden>Armá tu mate</button>
+    <div class="spacer"></div>
+    <button class="btn ghost" id="inPrev">Anterior</button>
+    <button class="btn primary" id="inNext">Continuar recorrido →</button>
+  </div>
+</section>
+
+<!-- ================= ARMÁ TU MATE ================= -->
+<section class="builder" id="builder" aria-modal="true" role="dialog">
+  <div class="bhead">
+    <h2>Armá tu mate</h2>
+    <button class="close" id="bReset">Empezar de nuevo</button>
+    <button class="close" id="bClose">Cerrar ✕</button>
+  </div>
+  <div class="bsteps" id="bSteps"></div>
+  <div class="bbody">
+    <div class="bpreview" id="bPreview"></div>
+    <div class="bpanel">
+      <h3 class="lead" id="bLead">Elegí tu mate</h3>
+      <p class="say" id="bSay">Con qué te gusta cebar.</p>
+      <div class="opts" id="bOpts"></div>
+    </div>
+  </div>
+  <div class="bfoot">
+    <button class="btn ghost" id="bPrev">Anterior</button>
+    <div class="spacer"></div>
+    <button class="btn primary" id="bNext">Siguiente →</button>
+  </div>
+</section>
+
+<!-- ================= INTRO ================= -->
+<section class="intro" id="intro">
+  <div class="bg" id="introBg"></div>
+  <div class="veil"></div>
+  <div class="inner">
+    <p class="kicker rise" style="animation-delay:.05s">Mate &amp; Café · Cafetería y boutique del mate</p>
+    <h1 class="rise" style="animation-delay:.14s">Conocé nuestro espacio<br>antes de <em>venir</em></h1>
+    <p class="sub rise" style="animation-delay:.24s">Un lugar para tomar, compartir, elegir y crear. Recorré las cuatro zonas del local y armá tu mate paso a paso.</p>
+    <div class="acts rise" style="animation-delay:.34s">
+      <button class="btn primary" id="iStart">Comenzar recorrido</button>
+      <button class="btn" id="iExplore">Explorar mapa</button>
+      <button class="btn mate" id="iBuild">Armá tu mate</button>
+    </div>
+    <div class="foot rise" style="animation-delay:.46s">
+      <span><i></i>4 zonas</span><span><i></i>Plano 2D / 3D</span><span><i></i>Estación interactiva</span>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   1. DATOS DEL LOCAL — grilla 100 x 110 (y=0 = vereda / frente)
+   Agregar una zona nueva = agregar un objeto a SPACES.
+   ============================================================ */
+var W = 100, D = 110;
+
+var C = {
+  boutique:"#EFE6D8", estacion:"#E4ECDC", cafeteria:"#F2E7DC", salon:"#EDE7DC",
+  wall:"#DDD2C2", wallTop:"#EFE7DA", line:"#C3B6A3", sombra:"#B9A992"
+};
+
+var M = {
+  shelf:  ["#C8B29B","#AE9679","#8E7860"],
+  counter:["#7A5A48","#5C4033","#452F26"],
+  table:  ["#C8B29B","#AC9276","#8B735B"],
+  wood:   ["#D3BFA8","#B79E85","#95806A"],
+  sofa:   ["#8BA870","#6D8A55","#54693F"],
+  chair:  ["#9C6B43","#805436","#63412A"],
+  stool:  ["#9C6B43","#805436","#63412A"],
+  vitrine:["#E6EEF0","#CBD8DB","#A9B7BB"],
+  machine:["#9DA3A6","#7E8588","#5F6668"],
+  register:["#5C4033","#452F26","#33221B"],
+  plant:  ["#6D8A55","#54693F","#3B5E2B"],
+  glass:  ["#DCE9EC","#BCCFD3","#9AB0B5"],
+  rug:    ["#B79E85","#9C8368","#7E6851"],
+  display:["#3B5E2B","#315023","#26401C"],
+  booth:  ["#8BA870","#6D8A55","#54693F"],
+  bar:    ["#B79E85","#9C8368","#7E6851"],
+  jar:    ["#8BA870","#6D8A55","#54693F"],
+  none:   ["#D8CCBB","#BFB19E","#A2947F"]
+};
+
+var SPACES = [
+  {
+    id:"boutique", n:"01", name:"Boutique de Mate", title:"Acceso & Boutique de Mate",
+    poly:[[0,0],[W,0],[W,28],[0,28]], fill:C.boutique, label:[50,13],
+    desc:"Puerta de entrada y primera parada: estanterías iluminadas con mates artesanales, bombillas de autor, termos, materas y yerbas de origen.",
+    tags:["Mates artesanales","Bombillas de autor","Termos y materas","Yerbas y blends","Accesorios","Kits de regalo"],
+    props:[
+      {x:42,y:-0.7,w:16,d:1.8,h:7.5,k:"glass",lbl:"acceso"},
+      {x:39,y:2.5,w:22,d:5,h:0.3,k:"rug"},
+      {x:1.4,y:4,w:4,d:20,h:12,k:"shelf",lbl:"estantería iluminada"},
+      {x:94.6,y:4,w:4,d:20,h:12,k:"shelf"},
+      {x:11,y:7,w:15,d:6,h:6.5,k:"vitrine",lbl:"mates"},
+      {x:70,y:7,w:17,d:6,h:6.5,k:"vitrine",lbl:"termos"},
+      {x:34,y:9,w:30,d:8,h:4.2,k:"table",lbl:"mesa de exhibición"},
+      {x:38,y:10.5,w:4,d:4,h:2.6,k:"jar"},
+      {x:48,y:10.5,w:4,d:4,h:2.6,k:"jar"},
+      {x:58,y:10.5,w:4,d:4,h:2.6,k:"jar"},
+      {x:12,y:20,w:4.5,d:4.5,h:8,k:"plant"},
+      {x:83,y:20,w:4.5,d:4.5,h:8,k:"plant"}
+    ]
+  },
+  {
+    id:"estacion", n:"02", name:"Armá Tu Mate", title:"Estación Armá Tu Mate & Degustación",
+    poly:[[0,28],[46,28],[46,62],[0,62]], fill:C.estacion, label:[23,40],
+    cta:true,
+    desc:"Mostrador interactivo donde elegís paso a paso tu mate, tu blend, tu bombilla y tus accesorios — y donde hacemos las catas de yerba.",
+    tags:["01 Mate","02 Blend","03 Bombilla","04 Accesorios","05 Kit","Catas y degustación","Grabado personalizado"],
+    props:[
+      {x:1.4,y:30,w:4,d:24,h:11,k:"shelf",lbl:"blends de yerba"},
+      {x:8,y:31,w:26,d:5,h:5,k:"display",lbl:"mates en exhibición"},
+      {x:7,y:41,w:30,d:6,h:6,k:"counter",lbl:"mostrador armá tu mate"},
+      {x:9,y:48.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:16,y:48.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:23,y:48.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:30,y:48.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:24,y:53,w:17,d:7,h:4.2,k:"table",lbl:"mesa de cata"},
+      {x:27,y:54.5,w:3,d:3,h:2.4,k:"jar"},
+      {x:33,y:54.5,w:3,d:3,h:2.4,k:"jar"},
+      {x:4,y:56,w:4.5,d:4.5,h:8,k:"plant"}
+    ]
+  },
+  {
+    id:"cafeteria", n:"03", name:"Cafetería", title:"Barra de Cafetería & Caja",
+    poly:[[46,28],[W,28],[W,62],[46,62]], fill:C.cafeteria, label:[73,40],
+    desc:"Café de especialidad, tés, medialunas y pastelería fina en la vitrina, con la caja unificada que cobra tanto la cafetería como la boutique.",
+    tags:["Café de especialidad","Tés e infusiones","Pastelería fina","Medialunas","Tostados y sándwiches","Caja unificada"],
+    props:[
+      {x:96,y:30,w:3.6,d:26,h:11,k:"shelf",lbl:"estantería de barra"},
+      {x:52,y:33,w:21,d:5,h:6.5,k:"vitrine",lbl:"pastelería"},
+      {x:76,y:33,w:11,d:5,h:7,k:"machine",lbl:"café"},
+      {x:89,y:33,w:6,d:5,h:6,k:"register",lbl:"caja"},
+      {x:52,y:42,w:43,d:7,h:6,k:"counter",lbl:"barra"},
+      {x:56,y:50.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:63,y:50.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:70,y:50.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:77,y:50.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:84,y:50.5,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:49,y:56,w:4.5,d:4.5,h:8,k:"plant"}
+    ]
+  },
+  {
+    id:"salon", n:"04", name:"Salón & Coworking", title:"Salón de Consumo & Coworking",
+    poly:[[0,62],[W,62],[W,D],[0,D]], fill:C.salon, label:[50,86],
+    desc:"El lugar donde todo se comparte: sofá lounge para rondas de mate, mesas y boxes, y barras laterales con enchufes y Wi-Fi para trabajar.",
+    tags:["Sofá lounge","Mesas y boxes","Mesa comunitaria","Barra con enchufes","Wi-Fi","Alquiler de kits de mate"],
+    props:[
+      {x:4,y:66,w:27,d:10,h:5,k:"sofa",lbl:"sofá lounge"},
+      {x:10,y:79,w:15,d:8,h:3.4,k:"table"},
+      {x:38,y:68,w:11,d:7,h:4,k:"table"},
+      {x:38,y:64.5,w:3,d:3,h:4,k:"chair"},{x:45,y:64.5,w:3,d:3,h:4,k:"chair"},
+      {x:38,y:75.5,w:3,d:3,h:4,k:"chair"},{x:45,y:75.5,w:3,d:3,h:4,k:"chair"},
+      {x:56,y:68,w:11,d:7,h:4,k:"table",lbl:"mesas"},
+      {x:56,y:64.5,w:3,d:3,h:4,k:"chair"},{x:63,y:64.5,w:3,d:3,h:4,k:"chair"},
+      {x:56,y:75.5,w:3,d:3,h:4,k:"chair"},{x:63,y:75.5,w:3,d:3,h:4,k:"chair"},
+      {x:76,y:66,w:22,d:12,h:6,k:"booth",lbl:"boxes"},
+      {x:76,y:81,w:22,d:12,h:6,k:"booth"},
+      {x:0.8,y:92,w:4,d:16,h:5,k:"bar",lbl:"barra con enchufes"},
+      {x:6,y:94,w:3.2,d:3.2,h:4,k:"stool"},{x:6,y:100,w:3.2,d:3.2,h:4,k:"stool"},
+      {x:30,y:96,w:38,d:9,h:4.2,k:"table",lbl:"mesa comunitaria"},
+      {x:32,y:92,w:3,d:3,h:4,k:"chair"},{x:40,y:92,w:3,d:3,h:4,k:"chair"},
+      {x:48,y:92,w:3,d:3,h:4,k:"chair"},{x:56,y:92,w:3,d:3,h:4,k:"chair"},
+      {x:32,y:105.5,w:3,d:3,h:4,k:"chair"},{x:40,y:105.5,w:3,d:3,h:4,k:"chair"},
+      {x:48,y:105.5,w:3,d:3,h:4,k:"chair"},{x:56,y:105.5,w:3,d:3,h:4,k:"chair"},
+      {x:76,y:98,w:22,d:8,h:3.4,k:"table"},
+      {x:88,y:106,w:4.5,d:4.5,h:8,k:"plant"}
+    ]
+  }
+];
+
+var byId = {}; SPACES.forEach(function(s,i){ s.i=i; byId[s.id]=s; });
+
+/* ============================================================
+   2. PROYECCIÓN: planta (2D) o maqueta axonométrica (3D)
+   ============================================================ */
+var view = "3d";
+function proj(x,y,z){
+  if(view === "2d") return [x,y];
+  return [(x-y)*0.866, (x+y)*0.5 - (z||0)*0.82];
+}
+function pts(a){ return a.map(function(p){return p[0].toFixed(2)+","+p[1].toFixed(2);}).join(" "); }
+function projPoly(poly,z){ return poly.map(function(p){ return proj(p[0],p[1],z||0); }); }
+function centroid(poly){ var x=0,y=0; poly.forEach(function(p){x+=p[0];y+=p[1];}); return [x/poly.length,y/poly.length]; }
+function mat(k){ return M[k] || M.none; }
+
+function box(p){
+  var x=p.x,y=p.y,w=p.w,d=p.d,h=p.h||1, c=mat(p.k), out="";
+  if(view === "2d"){
+    var dash = (p.k==="rug"||p.k==="booth") ? ' stroke-dasharray="1.6 1.2"' : "";
+    out += '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+d+'" rx="0.7" fill="'+c[0]+'" fill-opacity=".85" stroke="'+c[2]+'" stroke-width="0.4"'+dash+'/>';
+    if(p.k==="stool"||p.k==="chair"||p.k==="plant"||p.k==="jar")
+      out += '<circle cx="'+(x+w/2)+'" cy="'+(y+d/2)+'" r="'+(Math.min(w,d)/2.5)+'" fill="'+c[1]+'"/>';
+    if(p.k==="counter"||p.k==="table"||p.k==="bar"||p.k==="sofa")
+      out += '<line x1="'+(x+0.8)+'" y1="'+(y+d/2)+'" x2="'+(x+w-0.8)+'" y2="'+(y+d/2)+'" stroke="'+c[2]+'" stroke-width="0.32" stroke-opacity=".6"/>';
+    if(p.lbl) out += '<text class="dimtext" x="'+(x+w/2)+'" y="'+(y+d+2.2)+'" text-anchor="middle">'+p.lbl+'</text>';
+    return out;
+  }
+  var t = pts([proj(x,y,h),proj(x+w,y,h),proj(x+w,y+d,h),proj(x,y+d,h)]);
+  var r = pts([proj(x+w,y,h),proj(x+w,y+d,h),proj(x+w,y+d,0),proj(x+w,y,0)]);
+  var f = pts([proj(x,y+d,h),proj(x+w,y+d,h),proj(x+w,y+d,0),proj(x,y+d,0)]);
+  var sh = pts([proj(x,y,0),proj(x+w,y,0),proj(x+w,y+d,0),proj(x,y+d,0)]);
+  out += '<polygon points="'+sh+'" fill="'+C.sombra+'" fill-opacity=".28" transform="translate(1.3,1)"/>';
+  out += '<polygon points="'+f+'" fill="'+c[2]+'"/>';
+  out += '<polygon points="'+r+'" fill="'+c[1]+'"/>';
+  out += '<polygon points="'+t+'" fill="'+c[0]+'"/>';
+  if(p.k === "plant"){
+    var pc = proj(x+w/2,y+d/2,h+2.2);
+    out += '<circle cx="'+pc[0]+'" cy="'+pc[1]+'" r="'+(w*0.85)+'" fill="#6D8A55"/>';
+    out += '<circle cx="'+(pc[0]-w*0.4)+'" cy="'+(pc[1]+w*0.3)+'" r="'+(w*0.55)+'" fill="#8BA870"/>';
+  }
+  if(p.k === "machine" || p.k === "register" || p.k === "display"){
+    out += '<polygon points="'+t+'" fill="#FDFBF7" fill-opacity=".22"/>';
+  }
+  if(p.lbl){
+    var lp = proj(x+w/2, y+d/2, h+2.4);
+    out += '<text class="dimtext" x="'+lp[0]+'" y="'+lp[1]+'" text-anchor="middle">'+p.lbl+'</text>';
+  }
+  return out;
+}
+
+function walls(poly){
+  if(view === "2d")
+    return '<polygon points="'+pts(projPoly(poly,0))+'" fill="none" stroke="'+C.line+'" stroke-width="1.4" stroke-linejoin="miter"/>';
+  var c = centroid(poly), out = "";
+  for(var i=0;i<poly.length;i++){
+    var a=poly[i], b=poly[(i+1)%poly.length];
+    var mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2;
+    var nx=mx-c[0], ny=my-c[1], L=Math.hypot(nx,ny)||1; nx/=L; ny/=L;
+    var m0=proj(mx,my,0), m1=proj(mx+nx*2,my+ny*2,0);
+    if(m1[1] >= m0[1]) continue;
+    var ext = (Math.max(a[0],b[0])<0.5) || (Math.min(a[0],b[0])>W-0.5) ||
+              (Math.max(a[1],b[1])<0.5) || (Math.min(a[1],b[1])>D-0.5);
+    var h = ext ? 13 : 5.5;
+    out += '<polygon points="'+pts([proj(a[0],a[1],0),proj(b[0],b[1],0),proj(b[0],b[1],h),proj(a[0],a[1],h)])+'" fill="'+C.wall+'"/>';
+    out += '<polygon points="'+pts([proj(a[0],a[1],h),proj(b[0],b[1],h),proj(b[0]+nx*1.1,b[1]+ny*1.1,h),proj(a[0]+nx*1.1,a[1]+ny*1.1,h)])+'" fill="'+C.wallTop+'"/>';
+  }
+  return out;
+}
+
+/* ---------- mapa ---------- */
+var mapEl = document.getElementById("map");
+
+function renderMap(){
+  var all = [];
+  SPACES.forEach(function(s){
+    projPoly(s.poly,0).forEach(function(p){ all.push(p); });
+    if(view === "3d") projPoly(s.poly,13).forEach(function(p){ all.push(p); });
+  });
+  var xs=all.map(function(p){return p[0];}), ys=all.map(function(p){return p[1];});
+  var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs);
+  var minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys)+6;
+  var pad = view === "2d" ? 12 : 8;
+  var vb = (minX-pad)+" "+(minY-pad)+" "+((maxX-minX)+pad*2)+" "+((maxY-minY)+pad*2);
+
+  var order = SPACES.slice().sort(function(a,b){
+    var ca=centroid(a.poly), cb=centroid(b.poly);
+    return (ca[0]+ca[1])-(cb[0]+cb[1]);
+  });
+
+  var svg = '<svg viewBox="'+vb+'" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Plano interactivo del local">';
+  svg += '<defs><linearGradient id="gGlow" x1="0" y1="0" x2="0" y2="1">'
+      +  '<stop offset="0%" stop-color="#8BA870" stop-opacity=".45"/><stop offset="100%" stop-color="#8BA870" stop-opacity=".12"/></linearGradient></defs>';
+
+  if(view === "3d"){
+    svg += '<polygon points="'+pts(projPoly([[0,0],[W,0],[W,D],[0,D]],0))+'" fill="'+C.sombra+'" fill-opacity=".35" transform="translate(3,3)"/>';
+  }
+
+  order.forEach(function(s){
+    var c = centroid(s.poly), lab = s.label || c;
+    var cp = proj(c[0],c[1],0);
+    var lp = proj(lab[0],lab[1], view==="3d" ? 1.2 : 0);
+    var g = '<g class="room" data-id="'+s.id+'" style="--cx:'+cp[0].toFixed(2)+'px;--cy:'+cp[1].toFixed(2)+'px" tabindex="0" role="button" aria-label="'+s.title+'">';
+    g += walls(s.poly);
+    g += '<polygon class="floor" points="'+pts(projPoly(s.poly,0))+'" fill="'+s.fill+'" stroke="'+C.line+'" stroke-width="0.5"/>';
+    g += '<polygon class="glow" points="'+pts(projPoly(s.poly,0))+'" fill="url(#gGlow)" stroke="#3B5E2B" stroke-width="0.85"/>';
+    g += '<g class="props">' + s.props.slice().sort(function(a,b){return (a.x+a.y)-(b.x+b.y);}).map(box).join("") + '</g>';
+    g += '<g class="lab">';
+    g += '<text class="rlabel" x="'+lp[0]+'" y="'+lp[1]+'" text-anchor="middle">'+s.name+'</text>';
+    g += '<text class="rsub" x="'+lp[0]+'" y="'+(lp[1]+2.8)+'" text-anchor="middle">Zona '+s.n+'</text>';
+    g += '</g>';
+    g += '<g class="chip"><rect x="'+(lp[0]-8.4)+'" y="'+(lp[1]+4.4)+'" width="16.8" height="3.8" rx="1.9" fill="#3B5E2B"/>'
+       + '<text class="chiptext" x="'+lp[0]+'" y="'+(lp[1]+7.05)+'" text-anchor="middle">EXPLORAR ›</text></g>';
+    g += '</g>';
+    svg += g;
+  });
+
+  if(view === "2d"){
+    svg += '<g opacity=".8"><line x1="-5" y1="0" x2="-5" y2="'+D+'" stroke="'+C.line+'" stroke-width="0.3"/>'
+        +  '<text class="dimtext" x="-7.5" y="'+(D/2)+'" text-anchor="middle" transform="rotate(-90 -7.5 '+(D/2)+')">'+D+' m</text>'
+        +  '<line x1="0" y1="-6" x2="'+W+'" y2="-6" stroke="'+C.line+'" stroke-width="0.3"/>'
+        +  '<text class="dimtext" x="'+(W/2)+'" y="-8">'+W+' m</text></g>';
+  }
+  svg += '</svg>';
+  mapEl.innerHTML = svg;
+
+  mapEl.querySelectorAll(".room").forEach(function(el){
+    el.addEventListener("click", function(){ openSpace(byId[el.dataset.id]); });
+    el.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openSpace(byId[el.dataset.id]); } });
+  });
+  syncRoomStates();
+}
+
+/* ============================================================
+   3. PAN / ZOOM
+   ============================================================ */
+var stage = document.getElementById("stage");
+var tf = {s:1,x:0,y:0};
+function applyTf(){ mapEl.style.transform = "translate("+tf.x+"px,"+tf.y+"px) scale("+tf.s+")"; }
+function resetTf(){ var n = window.innerWidth < 820; tf = {s: n?1.5:1, x:0, y: n?70:0}; applyTf(); }
+function zoom(f,cx,cy){
+  var ns = Math.min(3.2, Math.max(0.55, tf.s*f));
+  var r = stage.getBoundingClientRect();
+  var px = (cx===undefined? r.width/2 : cx-r.left), py = (cy===undefined? r.height/2 : cy-r.top);
+  tf.x = px - (px-tf.x)*(ns/tf.s); tf.y = py - (py-tf.y)*(ns/tf.s); tf.s = ns; applyTf();
+}
+document.getElementById("zIn").onclick  = function(){ zoom(1.22); };
+document.getElementById("zOut").onclick = function(){ zoom(1/1.22); };
+document.getElementById("zRst").onclick = resetTf;
+stage.addEventListener("wheel", function(e){ e.preventDefault(); zoom(e.deltaY<0?1.1:1/1.1, e.clientX, e.clientY); }, {passive:false});
+
+var ptrs = new Map(), lastDist = 0, moved = false;
+stage.addEventListener("pointerdown", function(e){
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); moved = false;
+  if(ptrs.size===1) stage.classList.add("dragging");
+});
+window.addEventListener("pointermove", function(e){
+  if(!ptrs.has(e.pointerId)) return;
+  var prev = ptrs.get(e.pointerId);
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===1){
+    var dx=e.clientX-prev.x, dy=e.clientY-prev.y;
+    if(Math.abs(dx)+Math.abs(dy)>2) moved = true;
+    tf.x+=dx; tf.y+=dy; applyTf();
+  } else if(ptrs.size===2){
+    moved = true;
+    var a = Array.from(ptrs.values());
+    var dist = Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y);
+    var mid = {x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2};
+    if(lastDist) zoom(dist/lastDist, mid.x, mid.y);
+    lastDist = dist;
+  }
+});
+function endPtr(e){ ptrs.delete(e.pointerId); if(ptrs.size<2) lastDist=0; if(ptrs.size===0) stage.classList.remove("dragging"); }
+window.addEventListener("pointerup", endPtr);
+window.addEventListener("pointercancel", endPtr);
+stage.addEventListener("click", function(e){ if(moved) e.stopPropagation(); }, true);
+
+/* ============================================================
+   4. RECORRIDO
+   ============================================================ */
+var state = { mode:"guided", step:0, visited:{}, skipped:{}, current:null };
+var tourcard = document.getElementById("tourcard");
+var railEl = document.getElementById("rail");
+var endcard = document.getElementById("endcard");
+
+function setMode(m){
+  state.mode = m;
+  document.getElementById("mGuided").setAttribute("aria-pressed", String(m==="guided"));
+  document.getElementById("mFree").setAttribute("aria-pressed", String(m==="free"));
+  tourcard.hidden = (m!=="guided");
+  if(m==="guided") renderTourCard();
+  syncRoomStates();
+}
+document.getElementById("mGuided").onclick = function(){ endcard.classList.remove("open"); setMode("guided"); };
+document.getElementById("mFree").onclick   = function(){ endcard.classList.remove("open"); setMode("free"); };
+
+function setView(v){
+  view = v;
+  document.getElementById("v2d").setAttribute("aria-pressed", String(v==="2d"));
+  document.getElementById("v3d").setAttribute("aria-pressed", String(v==="3d"));
+  mapEl.style.opacity = "0";
+  setTimeout(function(){ renderMap(); mapEl.style.transition="opacity .3s"; mapEl.style.opacity="1"; }, 140);
+}
+document.getElementById("v2d").onclick = function(){ setView("2d"); };
+document.getElementById("v3d").onclick = function(){ setView("3d"); };
+
+function syncRoomStates(){
+  var cur = SPACES[state.step];
+  mapEl.querySelectorAll(".room").forEach(function(el){
+    var id = el.dataset.id;
+    el.classList.toggle("hot", state.mode==="guided" && cur && cur.id===id);
+    el.classList.toggle("dim", state.mode==="guided" && cur && cur.id!==id);
+  });
+}
+function renderTourCard(){
+  if(state.step >= SPACES.length){ tourcard.hidden = true; endcard.classList.add("open"); return; }
+  endcard.classList.remove("open");
+  tourcard.hidden = (state.mode!=="guided");
+  var s = SPACES[state.step];
+  document.getElementById("tcNum").textContent = s.n;
+  document.getElementById("tcOf").textContent = "Etapa "+(state.step+1)+" de "+SPACES.length;
+  document.getElementById("tcName").textContent = s.title;
+  document.getElementById("tcDesc").textContent = s.desc;
+  document.getElementById("tcPrev").disabled = state.step===0;
+  syncRoomStates();
+}
+function renderRail(){
+  var html = "";
+  SPACES.forEach(function(s,i){
+    var cls = "step";
+    if(state.visited[s.id]) cls += " done";
+    if(state.skipped[s.id]) cls += " skipped";
+    if(state.mode==="guided" && i===state.step) cls += " cur";
+    if(i) html += '<span class="sep"></span>';
+    html += '<button class="'+cls+'" data-i="'+i+'" title="'+s.title+'"><span class="dot"></span>'
+         +  '<span class="num">'+s.n+'</span><span class="nm">'+s.name+'</span></button>';
+  });
+  railEl.innerHTML = html;
+  railEl.querySelectorAll(".step").forEach(function(b){
+    b.onclick = function(){
+      var i = +b.dataset.i;
+      if(state.mode==="guided"){ state.step = i; renderTourCard(); }
+      openSpace(SPACES[i]);
+    };
+  });
+}
+
+/* ============================================================
+   5. VISTA INTERIOR
+   ============================================================ */
+var interior = document.getElementById("interior");
+var renderBox = document.getElementById("render");
+
+function openSpace(s){
+  if(!s) return;
+  state.current = s; state.visited[s.id] = true; delete state.skipped[s.id];
+  if(state.mode==="guided") state.step = s.i;
+  var old = renderBox.querySelector("svg"); if(old) old.remove();
+  renderBox.insertAdjacentHTML("afterbegin", SCENES[s.id]());
+  var svgEl = renderBox.querySelector("svg");
+  if(svgEl) svgEl.setAttribute("preserveAspectRatio", window.innerWidth<820 ? "xMidYMid meet" : "xMidYMid slice");
+  document.getElementById("inIdx").textContent = "Zona "+s.n+" / "+SPACES.length;
+  document.getElementById("inTitle").textContent = s.title;
+  document.getElementById("inDesc").textContent = s.desc;
+  document.getElementById("inTags").innerHTML = s.tags.map(function(t){return '<span class="tag">'+t+'</span>';}).join("");
+  document.getElementById("inCta").hidden = !s.cta;
+  document.getElementById("inPrev").disabled = s.i===0;
+  document.getElementById("inNext").textContent = (s.i===SPACES.length-1) ? "Finalizar recorrido ✓" : "Continuar recorrido →";
+  interior.classList.add("open");
+  document.getElementById("inBack").focus();
+  renderRail(); syncRoomStates();
+}
+function closeInterior(){
+  interior.classList.remove("open"); state.current = null;
+  renderRail(); if(state.mode==="guided") renderTourCard(); syncRoomStates();
+}
+document.getElementById("inBack").onclick = closeInterior;
+document.getElementById("inPrev").onclick = function(){ var s=state.current; if(s && s.i>0) openSpace(SPACES[s.i-1]); };
+document.getElementById("inNext").onclick = function(){
+  var s = state.current; if(!s) return;
+  if(s.i === SPACES.length-1){ state.step = SPACES.length; closeInterior(); tourcard.hidden = true; endcard.classList.add("open"); }
+  else openSpace(SPACES[s.i+1]);
+};
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Escape") return;
+  if(document.getElementById("builder").classList.contains("open")) closeBuilder();
+  else if(interior.classList.contains("open")) closeInterior();
+});
+document.getElementById("tcEnter").onclick = function(){ openSpace(SPACES[state.step]); };
+document.getElementById("tcPrev").onclick  = function(){ if(state.step>0){ state.step--; renderTourCard(); renderRail(); } };
+document.getElementById("tcSkip").onclick  = function(){
+  var s = SPACES[state.step];
+  if(s && !state.visited[s.id]) state.skipped[s.id] = true;
+  state.step++;
+  if(state.step >= SPACES.length){ tourcard.hidden = true; endcard.classList.add("open"); }
+  renderTourCard(); renderRail();
+};
+document.getElementById("ecRestart").onclick = function(){
+  state.step=0; state.visited={}; state.skipped={};
+  endcard.classList.remove("open"); setMode("guided"); renderTourCard(); renderRail();
+};
+document.getElementById("ecFree").onclick = function(){ endcard.classList.remove("open"); setMode("free"); renderRail(); };
+
+/* ============================================================
+   6. ESCENAS INTERIORES (renders ilustrativos, reemplazables por
+   fotografías reales, panorámicas 360° o video)
+   ============================================================ */
+var VB = 'viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice"';
+
+function sh(hex,f){
+  var n = parseInt(hex.slice(1),16);
+  var r=Math.min(255,Math.round((n>>16)*f)), g=Math.min(255,Math.round(((n>>8)&255)*f)), b=Math.min(255,Math.round((n&255)*f));
+  return "rgb("+r+","+g+","+b+")";
+}
+function shell(o){
+  var wall=o.wall||"#EFEAE1", floor=o.floor||"#C8B29B", ceil=o.ceil||"#FDFBF7";
+  var s = '<defs>';
+  s += '<linearGradient id="fl'+o.k+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+sh(floor,1.06)+'"/><stop offset="100%" stop-color="'+sh(floor,.8)+'"/></linearGradient>';
+  s += '<linearGradient id="wl'+o.k+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+sh(wall,1.04)+'"/><stop offset="100%" stop-color="'+sh(wall,.93)+'"/></linearGradient>';
+  s += '<radialGradient id="lp'+o.k+'" cx="50%" cy="24%" r="62%"><stop offset="0%" stop-color="#FFF4DC" stop-opacity=".85"/><stop offset="100%" stop-color="#FFF4DC" stop-opacity="0"/></radialGradient>';
+  s += '</defs>';
+  s += '<rect width="1200" height="720" fill="'+sh(wall,.9)+'"/>';
+  s += '<polygon points="0,0 1200,0 940,190 260,190" fill="'+ceil+'"/>';
+  s += '<polygon points="0,0 260,190 260,505 0,720" fill="'+sh(wall,.9)+'"/>';
+  s += '<polygon points="1200,0 940,190 940,505 1200,720" fill="'+sh(wall,.97)+'"/>';
+  s += '<rect x="260" y="190" width="680" height="315" fill="url(#wl'+o.k+')"/>';
+  s += '<polygon points="0,720 1200,720 940,505 260,505" fill="url(#fl'+o.k+')"/>';
+  s += '<rect width="1200" height="720" fill="url(#lp'+o.k+')"/>';
+  return s;
+}
+function boards(){
+  var s = '<g stroke="#A98D74" stroke-opacity=".35" stroke-width="1.4">';
+  for(var i=0;i<=10;i++) s += '<line x1="'+(i*120)+'" y1="720" x2="'+(260+i*68)+'" y2="505"/>';
+  return s + '</g>';
+}
+function lamp(x,y,r){
+  return '<g><line x1="'+x+'" y1="0" x2="'+x+'" y2="'+y+'" stroke="#5C4033" stroke-width="3"/>'
+    + '<path d="M'+(x-r)+','+(y+r*0.55)+' Q'+x+','+(y-r*0.85)+' '+(x+r)+','+(y+r*0.55)+' Z" fill="#9C6B43"/>'
+    + '<ellipse cx="'+x+'" cy="'+(y+r*0.55)+'" rx="'+r+'" ry="'+(r*0.22)+'" fill="#FFE7B8"/>'
+    + '<ellipse cx="'+x+'" cy="'+(y+r*2.6)+'" rx="'+(r*2.1)+'" ry="'+(r*0.75)+'" fill="#FFEFCB" fill-opacity=".5"/></g>';
+}
+/* mate dibujado de perfil, reutilizado en escenas y en el configurador */
+function mateGlyph(x,y,s,body,rim,strawCol){
+  var g = '<g transform="translate('+x+','+y+') scale('+s+')">';
+  g += '<ellipse cx="0" cy="52" rx="34" ry="8" fill="#000" fill-opacity=".10"/>';
+  g += '<path d="M-32,-10 Q-36,44 0,50 Q36,44 32,-10 Z" fill="'+body+'"/>';
+  g += '<path d="M-32,-10 Q0,-24 32,-10 Q0,2 -32,-10 Z" fill="'+rim+'"/>';
+  g += '<path d="M-20,6 Q0,16 20,6 Q0,30 -20,6 Z" fill="#6D8A55" fill-opacity=".85"/>';
+  g += '<path d="M14,-6 L34,-72" stroke="'+strawCol+'" stroke-width="7" stroke-linecap="round"/>';
+  g += '<circle cx="34" cy="-72" r="6" fill="'+strawCol+'"/>';
+  g += '</g>';
+  return g;
+}
+
+var SCENES = {
+
+boutique: function(){
+  var s = '<svg '+VB+'>' + shell({k:"b",wall:"#EFEAE1",floor:"#C8B29B",ceil:"#FDFBF7"}) + boards();
+  // vidriera al frente
+  s += '<g><rect x="286" y="212" width="252" height="272" fill="#DCE9EC"/>';
+  s += '<rect x="286" y="212" width="252" height="272" fill="#FFFFFF" fill-opacity=".35"/>';
+  s += '<rect x="404" y="212" width="14" height="272" fill="#5C4033"/>';
+  s += '<rect x="286" y="200" width="252" height="14" fill="#5C4033"/></g>';
+  // estantería iluminada con mates
+  s += '<g><rect x="596" y="196" width="330" height="300" fill="#C8B29B"/>';
+  s += '<rect x="606" y="206" width="310" height="280" fill="#EFEAE1"/>';
+  [268,346,424].forEach(function(y,row){
+    s += '<rect x="606" y="'+y+'" width="310" height="8" fill="#A98D74"/>';
+    s += '<rect x="612" y="'+(y-4)+'" width="298" height="4" fill="#FFE7B8"/>';
+    for(var i=0;i<4;i++){
+      var cx = 654 + i*74;
+      var body = row===0 ? "#5C4033" : (row===1 ? "#9C6B43" : "#3B5E2B");
+      s += mateGlyph(cx, y-16, 0.42, body, "#C8B29B", "#8A8F92");
+    }
+  });
+  s += '<text x="761" y="182" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="21" font-weight="600" fill="#5C4033">Mates &amp; bombillas de autor</text></g>';
+  // mesa de exhibición central
+  s += '<g><polygon points="300,672 900,672 852,540 348,540" fill="#C8B29B"/>';
+  s += '<polygon points="348,540 852,540 848,526 352,526" fill="#D8C7B2"/>';
+  s += '<polygon points="300,672 900,672 900,700 300,700" fill="#A98D74"/>';
+  [430,530,630,730].forEach(function(x,i){
+    s += '<g><rect x="'+(x-30)+'" y="440" width="60" height="86" rx="8" fill="'+(i%2?"#3B5E2B":"#5C4033")+'"/>';
+    s += '<rect x="'+(x-30)+'" y="440" width="60" height="16" rx="8" fill="#C8B29B"/>';
+    s += '<text x="'+x+'" y="490" text-anchor="middle" font-family="Karla,sans-serif" font-size="11" letter-spacing="1" fill="#FDFBF7">YERBA</text></g>';
+  });
+  s += '</g>';
+  // termos y materas a la derecha
+  s += '<g><rect x="978" y="380" width="196" height="150" fill="#A98D74"/>';
+  [1010,1060,1110,1152].forEach(function(x,i){
+    s += '<rect x="'+(x-16)+'" y="'+(300+ (i%2)*14)+'" width="32" height="82" rx="12" fill="'+(i%2?"#8A8F92":"#5C4033")+'"/>';
+  });
+  s += '<text x="1076" y="562" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" letter-spacing="3" fill="#6B5A4E">TERMOS Y MATERAS</text></g>';
+  s += lamp(420,70,44) + lamp(760,52,52) + lamp(1060,70,40);
+  // planta
+  s += '<g><rect x="150" y="470" width="80" height="96" rx="8" fill="#9C6B43"/>';
+  s += '<circle cx="190" cy="440" r="46" fill="#6D8A55"/><circle cx="152" cy="466" r="32" fill="#8BA870"/><circle cx="228" cy="462" r="30" fill="#3B5E2B"/></g>';
+  return s + '</svg>';
+},
+
+estacion: function(){
+  var s = '<svg '+VB+'>' + shell({k:"e",wall:"#E4ECDC",floor:"#C8B29B",ceil:"#FDFBF7"}) + boards();
+  // panel de pasos en la pared
+  s += '<g><rect x="300" y="206" width="600" height="112" rx="6" fill="#3B5E2B"/>';
+  s += '<text x="600" y="248" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="26" font-weight="600" fill="#FDFBF7">Armá tu mate</text>';
+  ["01 MATE","02 BLEND","03 BOMBILLA","04 ACCESORIOS","05 KIT"].forEach(function(t,i){
+    var x = 360 + i*120;
+    s += '<text x="'+x+'" y="290" text-anchor="middle" font-family="Karla,sans-serif" font-size="11.5" letter-spacing="1.2" font-weight="700" fill="#8BA870">'+t+'</text>';
+  });
+  s += '</g>';
+  // estantería de blends
+  s += '<g><rect x="60" y="250" width="200" height="250" fill="#C8B29B"/>';
+  [300,370,440].forEach(function(y){
+    s += '<rect x="60" y="'+y+'" width="200" height="7" fill="#A98D74"/>';
+    for(var i=0;i<4;i++) s += '<rect x="'+(74+i*46)+'" y="'+(y-42)+'" width="34" height="42" rx="4" fill="'+(i%2?"#6D8A55":"#3B5E2B")+'"/>';
+  });
+  s += '<text x="160" y="238" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" letter-spacing="3" fill="#3B5E2B">BLENDS</text></g>';
+  // mostrador interactivo
+  s += '<g><polygon points="230,690 1000,690 930,500 300,500" fill="#5C4033"/>';
+  s += '<polygon points="300,500 930,500 926,484 304,484" fill="#C8B29B"/>';
+  s += '<polygon points="230,690 1000,690 1000,720 230,720" fill="#452F26"/></g>';
+  // mates alineados sobre el mostrador, en proceso de armado
+  s += mateGlyph(400,466,0.66,"#5C4033","#C8B29B","#8A8F92");
+  s += mateGlyph(540,462,0.66,"#9C6B43","#D8C7B2","#8A8F92");
+  s += mateGlyph(680,462,0.66,"#3B5E2B","#C8B29B","#C8B29B");
+  s += mateGlyph(820,466,0.66,"#8A8F92","#DCE9EC","#8A8F92");
+  // bandeja de cata
+  s += '<g><rect x="900" y="430" width="230" height="70" rx="10" fill="#9C6B43"/>';
+  [940,1000,1060].forEach(function(x,i){
+    s += '<circle cx="'+x+'" cy="452" r="24" fill="#EFEAE1"/><circle cx="'+x+'" cy="452" r="17" fill="'+["#6D8A55","#3B5E2B","#8BA870"][i]+'"/>';
+  });
+  s += '<text x="1015" y="518" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" letter-spacing="3" fill="#6B5A4E">CATA DE YERBAS</text></g>';
+  s += lamp(430,60,42) + lamp(760,60,42);
+  return s + '</svg>';
+},
+
+cafeteria: function(){
+  var s = '<svg '+VB+'>' + shell({k:"c",wall:"#F2E7DC",floor:"#C8B29B",ceil:"#FDFBF7"}) + boards();
+  // pizarra de menú
+  s += '<g><rect x="620" y="170" width="330" height="172" rx="5" fill="#2E241D"/>';
+  s += '<rect x="630" y="180" width="310" height="152" rx="3" fill="none" stroke="#C8B29B" stroke-width="2"/>';
+  s += '<text x="785" y="220" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="24" font-weight="600" fill="#FDFBF7">Carta</text>';
+  ["Espresso · Flat white · Cortado","Té de hebras · Infusiones","Medialunas · Tostados","Pastelería fina del día"].forEach(function(t,i){
+    s += '<text x="785" y="'+(256+i*24)+'" text-anchor="middle" font-family="Karla,sans-serif" font-size="14" fill="#C8B29B">'+t+'</text>';
+  });
+  s += '</g>';
+  // estantería de tazas
+  s += '<g><rect x="200" y="240" width="330" height="160" fill="#C8B29B"/>';
+  [300,368].forEach(function(y){
+    s += '<rect x="200" y="'+y+'" width="330" height="7" fill="#A98D74"/>';
+    for(var i=0;i<6;i++){
+      var cx = 226+i*52;
+      s += '<path d="M'+(cx-14)+','+(y-32)+' h28 v18 a14,14 0 0 1 -28,0 Z" fill="#FDFBF7"/>';
+      s += '<path d="M'+(cx+14)+','+(y-26)+' a7,7 0 0 1 0,12" fill="none" stroke="#FDFBF7" stroke-width="3"/>';
+    }
+  });
+  s += '</g>';
+  // barra
+  s += '<g><polygon points="150,700 1080,700 990,486 250,486" fill="#5C4033"/>';
+  s += '<polygon points="250,486 990,486 986,468 254,468" fill="#C8B29B"/>';
+  s += '<polygon points="150,700 1080,700 1080,720 150,720" fill="#452F26"/></g>';
+  // máquina de café
+  s += '<g><rect x="700" y="384" width="210" height="112" rx="8" fill="#8A8F92"/>';
+  s += '<rect x="714" y="398" width="182" height="44" rx="4" fill="#5F6668"/>';
+  s += '<rect x="736" y="450" width="26" height="38" rx="4" fill="#5F6668"/><rect x="848" y="450" width="26" height="38" rx="4" fill="#5F6668"/>';
+  s += '<circle cx="805" cy="420" r="14" fill="#C8B29B"/>';
+  s += '<rect x="700" y="368" width="210" height="18" rx="5" fill="#6F7679"/>';
+  s += '<rect x="726" y="354" width="30" height="16" rx="3" fill="#FDFBF7"/><rect x="768" y="354" width="30" height="16" rx="3" fill="#FDFBF7"/></g>';
+  // vitrina de pastelería
+  s += '<g><rect x="250" y="380" width="380" height="92" rx="6" fill="#DCE9EC" fill-opacity=".9" stroke="#A9B7BB" stroke-width="3"/>';
+  s += '<rect x="250" y="446" width="380" height="26" fill="#C8B29B"/>';
+  [300,378,456,534].forEach(function(x,i){
+    if(i%2===0){ s += '<path d="M'+(x-26)+',442 q26,-40 52,0 Z" fill="#B77B3E"/>'; }
+    else { s += '<rect x="'+(x-26)+'" y="404" width="52" height="38" rx="6" fill="#E7C9A0"/><rect x="'+(x-26)+'" y="404" width="52" height="12" rx="6" fill="#9C6B43"/>'; }
+  });
+  s += '<text x="440" y="368" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" letter-spacing="3" fill="#6B5A4E">PASTELERÍA &amp; MEDIALUNAS</text></g>';
+  // caja
+  s += '<g><rect x="960" y="382" width="120" height="86" rx="6" fill="#5C4033"/>';
+  s += '<rect x="974" y="396" width="92" height="46" rx="4" fill="#EFEAE1"/>';
+  s += '<text x="1020" y="426" text-anchor="middle" font-family="Karla,sans-serif" font-size="12" letter-spacing="2" font-weight="700" fill="#5C4033">CAJA</text></g>';
+  s += lamp(400,58,40) + lamp(700,58,40) + lamp(1000,58,40);
+  return s + '</svg>';
+},
+
+salon: function(){
+  var s = '<svg '+VB+'>' + shell({k:"s",wall:"#EDE7DC",floor:"#C8B29B",ceil:"#FDFBF7"}) + boards();
+  // ventanal al fondo
+  s += '<g><rect x="300" y="210" width="600" height="230" fill="#DCE9EC"/>';
+  s += '<rect x="300" y="210" width="600" height="230" fill="#FFFFFF" fill-opacity=".4"/>';
+  s += '<rect x="594" y="210" width="12" height="230" fill="#5C4033"/>';
+  s += '<rect x="292" y="200" width="616" height="14" rx="3" fill="#5C4033"/>';
+  s += '<rect x="292" y="440" width="616" height="14" rx="3" fill="#5C4033"/></g>';
+  // sofá lounge
+  s += '<g><rect x="80" y="380" width="330" height="70" rx="14" fill="#6D8A55"/>';
+  s += '<rect x="80" y="438" width="330" height="46" rx="10" fill="#8BA870"/>';
+  s += '<rect x="80" y="428" width="26" height="66" rx="10" fill="#54693F"/><rect x="384" y="428" width="26" height="66" rx="10" fill="#54693F"/>';
+  [140,215,290,352].forEach(function(x){ s += '<rect x="'+(x-26)+'" y="390" width="52" height="46" rx="8" fill="#8BA870"/>'; });
+  s += '<rect x="96" y="494" width="16" height="26" fill="#5C4033"/><rect x="380" y="494" width="16" height="26" fill="#5C4033"/></g>';
+  // mesa ratona con mate compartido
+  s += '<g><ellipse cx="250" cy="546" rx="146" ry="40" fill="#C8B29B"/><ellipse cx="250" cy="536" rx="146" ry="40" fill="#D8C7B2"/>';
+  s += '<rect x="238" y="568" width="24" height="60" fill="#9C6B43"/></g>';
+  s += mateGlyph(262,530,0.74,"#5C4033","#C8B29B","#8A8F92");
+  s += '<g><rect x="140" y="478" width="42" height="62" rx="14" fill="#8A8F92"/><rect x="140" y="474" width="42" height="12" rx="5" fill="#5F6668"/></g>';
+  // boxes / booths a la derecha
+  s += '<g><rect x="880" y="418" width="300" height="120" rx="12" fill="#6D8A55"/>';
+  s += '<rect x="900" y="470" width="260" height="26" rx="6" fill="#54693F"/>';
+  s += '<polygon points="900,596 1180,596 1160,540 920,540" fill="#C8B29B"/>';
+  s += '<rect x="1026" y="596" width="26" height="52" fill="#9C6B43"/>';
+  s += '<text x="1030" y="404" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" letter-spacing="3" fill="#6B5A4E">BOXES</text></g>';
+  // barra de coworking con laptop y enchufe
+  s += '<g><polygon points="440,588 860,588 830,516 470,516" fill="#C8B29B"/>';
+  s += '<polygon points="470,516 830,516 828,506 472,506" fill="#D8C7B2"/>';
+  s += '<g><rect x="560" y="440" width="130" height="76" rx="4" fill="#5F6668"/><rect x="568" y="448" width="114" height="60" fill="#DCE9EC"/>';
+  s += '<polygon points="548,516 702,516 716,530 534,530" fill="#8A8F92"/></g>';
+  s += '<path d="M760,470 h30 v14 h-30 Z" fill="#EFEAE1" stroke="#A98D74" stroke-width="2"/>';
+  s += '<circle cx="769" cy="477" r="2.6" fill="#5C4033"/><circle cx="781" cy="477" r="2.6" fill="#5C4033"/>';
+  s += '<text x="775" y="500" text-anchor="middle" font-family="Karla,sans-serif" font-size="11" letter-spacing="2" fill="#6B5A4E">WI-FI · 220V</text>';
+  // banquetas
+  [520,610,700,790].forEach(function(x){
+    s += '<g><ellipse cx="'+x+'" cy="618" rx="32" ry="11" fill="#9C6B43"/><rect x="'+(x-5)+'" y="618" width="10" height="56" fill="#5C4033"/></g>';
+  });
+  s += '</g>';
+  s += lamp(360,60,40) + lamp(660,44,46) + lamp(980,60,40);
+  return s + '</svg>';
+}
+
+};
+
+/* ============================================================
+   7. ARMÁ TU MATE — configurador de 5 pasos
+   ============================================================ */
+var STEPS = [
+  { key:"mate", label:"Mate", lead:"Elegí tu mate", say:"Cada material cambia el sabor y el cuidado que pide.",
+    opts:[
+      {id:"calabaza", n:"Calabaza imperial", d:"Curada a mano. El sabor más clásico y redondo.", sw:"#9C6B43", body:"#9C6B43", rim:"#C8B29B"},
+      {id:"camionero", n:"Camionero de algarrobo", d:"Madera dura argentina, boca ancha, muy duradero.", sw:"#5C4033", body:"#5C4033", rim:"#C8B29B"},
+      {id:"torpedo", n:"Torpedo de acero", d:"Cero curado, cero mantenimiento. Ideal para la oficina.", sw:"#8A8F92", body:"#8A8F92", rim:"#DCE9EC"},
+      {id:"ceramica", n:"Cerámica esmaltada", d:"Neutro en sabor y fácil de lavar. Colores de autor.", sw:"#3B5E2B", body:"#3B5E2B", rim:"#8BA870"}
+    ]},
+  { key:"blend", label:"Blend", lead:"Elegí tu blend", say:"Todas nuestras yerbas son de origen y de productores chicos.",
+    opts:[
+      {id:"serrana", n:"Serrana suave", d:"Barbacuá liviano, poco polvo. Para tardes largas.", sw:"#8BA870", yerba:"#8BA870"},
+      {id:"barbacua", n:"Barbacuá ahumada", d:"Secado a leña, cuerpo intenso y final largo.", sw:"#54693F", yerba:"#54693F"},
+      {id:"litoral", n:"Cítrica del litoral", d:"Con peperina y cáscara de naranja. Fresca.", sw:"#B9C77E", yerba:"#B9C77E"},
+      {id:"despertar", n:"Despertar con guaraná", d:"Más energía, ideal para arrancar el día.", sw:"#6D8A55", yerba:"#6D8A55"}
+    ]},
+  { key:"bombilla", label:"Bombilla", lead:"Elegí tu bombilla", say:"De autor, hechas por orfebres y artesanos argentinos.",
+    opts:[
+      {id:"picoloro", n:"Alpaca pico de loro", d:"La clásica. Filtro de resorte, fácil de limpiar.", sw:"#B9BEC1", straw:"#B9BEC1"},
+      {id:"desarmable", n:"Acero desarmable", d:"Se abre en dos: la más higiénica del mostrador.", sw:"#8A8F92", straw:"#8A8F92"},
+      {id:"bambu", n:"Bambú artesanal", d:"No transmite calor. Sabor suave y muy liviana.", sw:"#C8B29B", straw:"#C8B29B"},
+      {id:"cincelada", n:"Alpaca cincelada", d:"Trabajada a mano, pieza de colección.", sw:"#D9C48A", straw:"#D9C48A"}
+    ]},
+  { key:"extras", label:"Accesorios", lead:"Sumá accesorios", say:"Elegí los que quieras — o seguí sin ninguno.", multi:true,
+    opts:[
+      {id:"termo", n:"Termo 1 L de acero", d:"Doce horas de temperatura. Pico cebador.", sw:"#8A8F92"},
+      {id:"matera", n:"Matera de cuero", d:"Cosida a mano, con espacio para termo y yerbera.", sw:"#9C6B43"},
+      {id:"yerbera", n:"Yerbera + azucarera", d:"Set de dos piezas a juego con tu mate.", sw:"#C8B29B"},
+      {id:"grabado", n:"Grabado personalizado", d:"Tu nombre o una frase, grabado en el local.", sw:"#3B5E2B"}
+    ]},
+  { key:"kit", label:"Kit", lead:"¿Cómo te lo llevás?", say:"El último paso define el armado y el empaque.",
+    opts:[
+      {id:"llevar", n:"Kit personal para llevar", d:"Todo empacado y listo para estrenar hoy.", sw:"#5C4033"},
+      {id:"local", n:"Para consumo en el local", d:"Te lo cebamos acá: alquilás el kit y lo usás en el salón.", sw:"#8BA870"},
+      {id:"regalo", n:"Kit de regalo", d:"Caja de madera, tarjeta escrita a mano y moño.", sw:"#9C6B43"},
+      {id:"corpo", n:"Kit corporativo", d:"Desde 10 unidades, con grabado de logo.", sw:"#3B5E2B"}
+    ]}
+];
+
+var pick = { mate:null, blend:null, bombilla:null, extras:[], kit:null };
+var bStep = 0;
+
+var builder = document.getElementById("builder");
+function openBuilder(){ builder.classList.add("open"); bStep = 0; drawBuilder(); document.getElementById("bClose").focus(); }
+function closeBuilder(){ builder.classList.remove("open"); }
+document.getElementById("bClose").onclick = closeBuilder;
+document.getElementById("openBuilderTop").onclick = openBuilder;
+document.getElementById("inCta").onclick = openBuilder;
+document.getElementById("ecBuild").onclick = function(){ endcard.classList.remove("open"); openBuilder(); };
+document.getElementById("bReset").onclick = function(){
+  pick = { mate:null, blend:null, bombilla:null, extras:[], kit:null }; bStep = 0; drawBuilder();
+};
+
+function optById(key,id){
+  var st = STEPS.filter(function(s){return s.key===key;})[0];
+  if(!st || !id) return null;
+  return st.opts.filter(function(o){return o.id===id;})[0] || null;
+}
+
+function matePreview(){
+  var m = optById("mate", pick.mate), y = optById("blend", pick.blend), b = optById("bombilla", pick.bombilla);
+  var body = m ? m.body : "#DCD2C4", rim = m ? m.rim : "#C3B6A3", straw = b ? b.straw : "#DCD2C4";
+  var s = '<svg viewBox="0 0 420 420" role="img" aria-label="Vista previa de tu mate">';
+  s += '<circle cx="210" cy="212" r="150" fill="#FFFFFF"/>';
+  s += '<circle cx="210" cy="212" r="150" fill="none" stroke="#DCD2C4" stroke-width="1.5" stroke-dasharray="4 6"/>';
+  s += '<g transform="translate(196,236) scale(1.85)">';
+  s += '<ellipse cx="0" cy="52" rx="34" ry="8" fill="#2E241D" fill-opacity=".10"/>';
+  s += '<path d="M-32,-10 Q-36,44 0,50 Q36,44 32,-10 Z" fill="'+body+'"/>';
+  s += '<path d="M-32,-10 Q0,-24 32,-10 Q0,2 -32,-10 Z" fill="'+rim+'"/>';
+  if(y) s += '<path d="M-21,4 Q0,15 21,4 Q0,32 -21,4 Z" fill="'+y.yerba+'"/>';
+  s += '<path d="M14,-6 L34,-72" stroke="'+straw+'" stroke-width="7" stroke-linecap="round"/>';
+  s += '<circle cx="34" cy="-72" r="6" fill="'+straw+'"/>';
+  s += '</g>';
+  // accesorios como sellos alrededor
+  var badges = pick.extras.map(function(id){ return optById("extras", id); }).filter(Boolean);
+  badges.forEach(function(o,i){
+    var cx = 74 + i*68, cy = 388;
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="19" fill="'+o.sw+'"/>';
+    s += '<circle cx="'+cx+'" cy="'+cy+'" r="19" fill="none" stroke="#FDFBF7" stroke-width="2"/>';
+  });
+  if(!pick.mate) s += '<text x="210" y="404" text-anchor="middle" font-family="Karla,sans-serif" font-size="13" letter-spacing="2" fill="#6B5A4E">TU MATE SE ARMA ACÁ</text>';
+  s += '</svg>';
+  return s;
+}
+
+function drawBuilder(){
+  // pasos
+  document.getElementById("bSteps").innerHTML = STEPS.map(function(st,i){
+    var cls = "bstep" + (i===bStep ? " cur" : (i<bStep ? " done" : ""));
+    return '<button class="'+cls+'" data-i="'+i+'"><b>0'+(i+1)+'</b><span>'+st.label+'</span></button>';
+  }).join("") + '<button class="bstep'+(bStep===STEPS.length?" cur":"")+'" data-i="'+STEPS.length+'"><b>✓</b><span>Resumen</span></button>';
+  document.getElementById("bSteps").querySelectorAll(".bstep").forEach(function(b){
+    b.onclick = function(){ bStep = +b.dataset.i; drawBuilder(); };
+  });
+
+  document.getElementById("bPreview").innerHTML = matePreview();
+
+  var lead = document.getElementById("bLead"), say = document.getElementById("bSay"), opts = document.getElementById("bOpts");
+
+  if(bStep === STEPS.length){
+    lead.textContent = "Tu mate, listo";
+    say.textContent = "Mostrale este resumen a quien te atienda y lo armamos igual.";
+    var m = optById("mate",pick.mate), y = optById("blend",pick.blend), b = optById("bombilla",pick.bombilla), k = optById("kit",pick.kit);
+    var ex = pick.extras.map(function(id){ var o=optById("extras",id); return o?o.n:null; }).filter(Boolean);
+    function row(t,v){ return '<dt>'+t+'</dt><dd'+(v?'':' class="none"')+'>'+(v||"sin elegir")+'</dd>'; }
+    opts.innerHTML = '<div class="resume"><h4>Resumen del kit</h4><dl>'
+      + row("01 Mate", m && m.n) + row("02 Blend", y && y.n) + row("03 Bombilla", b && b.n)
+      + row("04 Accesorios", ex.length ? ex.join(" · ") : null) + row("05 Kit", k && k.n)
+      + '</dl></div>';
+    document.getElementById("bNext").textContent = "Volver al recorrido";
+    document.getElementById("bNext").onclick = closeBuilder;
+  } else {
+    var st = STEPS[bStep];
+    lead.textContent = st.lead;
+    say.textContent = st.say;
+    opts.innerHTML = st.opts.map(function(o){
+      var on = st.multi ? pick.extras.indexOf(o.id) > -1 : pick[st.key] === o.id;
+      return '<button class="opt" aria-pressed="'+on+'" data-id="'+o.id+'">'
+        + '<span class="sw" style="background:'+o.sw+'"></span>'
+        + '<span class="tx"><b>'+o.n+'</b><small>'+o.d+'</small></span></button>';
+    }).join("");
+    opts.querySelectorAll(".opt").forEach(function(btn){
+      btn.onclick = function(){
+        var id = btn.dataset.id;
+        if(st.multi){
+          var at = pick.extras.indexOf(id);
+          if(at > -1) pick.extras.splice(at,1); else pick.extras.push(id);
+          drawBuilder();
+        } else {
+          pick[st.key] = id;
+          drawBuilder();
+          setTimeout(function(){ if(bStep < STEPS.length){ bStep++; drawBuilder(); } }, 220);
+        }
+      };
+    });
+    document.getElementById("bNext").textContent = bStep === STEPS.length-1 ? "Ver resumen ✓" : "Siguiente →";
+    document.getElementById("bNext").onclick = function(){ if(bStep < STEPS.length){ bStep++; drawBuilder(); } };
+  }
+  document.getElementById("bPrev").disabled = bStep === 0;
+}
+document.getElementById("bPrev").onclick = function(){ if(bStep>0){ bStep--; drawBuilder(); } };
+
+/* ============================================================
+   8. INTRO Y ARRANQUE
+   ============================================================ */
+document.getElementById("introBg").innerHTML = SCENES.estacion();
+function leaveIntro(mode){
+  var el = document.getElementById("intro");
+  el.classList.add("hide");
+  setTimeout(function(){ el.style.display = "none"; }, 620);
+  setMode(mode); renderRail();
+  if(mode === "guided"){ state.step = 0; renderTourCard(); }
+}
+document.getElementById("iStart").onclick   = function(){ leaveIntro("guided"); };
+document.getElementById("iExplore").onclick = function(){ leaveIntro("free"); };
+document.getElementById("iBuild").onclick   = function(){ leaveIntro("free"); openBuilder(); };
+
+renderMap();
+renderRail();
+setMode("guided");
+resetTf();
+drawBuilder();
+
+})();
+</script>
+
+</body>
+</html>

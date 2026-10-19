@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Recorrido Virtual 3D — Mate &amp; Café</title>
+<style>
+/* ============================================================
+   INTERFAZ HTML SUPERPUESTA (no dibujada en 3D)
+   Identidad Mate & Café: papel cálido, verde yerba, cuero, madera.
+   ============================================================ */
+:root{
+  --crema:#FDFBF7; --crema-2:#EFEAE1; --crema-3:#E4DCCF;
+  --madera:#C8B29B; --madera-osc:#A98D74;
+  --cafe:#5C4033; --cafe-cl:#7A5A48;
+  --yerba:#3B5E2B; --yerba-cl:#8BA870;
+  --acero:#8A8F92; --cuero:#9C6B43;
+  --tinta:#2E241D; --tinta-sv:#6B5A4E; --linea:#DCD2C4;
+  --font-d:Georgia,"Times New Roman",serif;
+  --font-b:system-ui,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0d0906}
+body{font-family:var(--font-b);color:var(--tinta);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+canvas{display:block;outline:none;touch-action:none}
+
+#lienzo{position:fixed;inset:0}
+
+/* ---- pantalla de carga ---- */
+#carga{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(120% 90% at 50% 30%,#3a2c20 0%,#1c140e 70%);color:var(--crema);transition:opacity .5s ease}
+#carga.oculto{opacity:0;pointer-events:none}
+#carga h1{font-family:var(--font-d);font-weight:600;font-size:26px;margin:0 0 6px;letter-spacing:.02em}
+#carga p{margin:0 0 22px;color:var(--madera);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase}
+.barra-carga{width:min(320px,70vw);height:6px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+.barra-carga i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--yerba-cl),var(--cuero));
+  transition:width .25s ease;border-radius:999px}
+#carga small{margin-top:12px;color:rgba(253,251,247,.55);font-size:11px;letter-spacing:.08em}
+
+/* ---- barra superior ---- */
+#barra-sup{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:10px 16px;background:linear-gradient(180deg,rgba(46,36,29,.82),rgba(46,36,29,0));pointer-events:none}
+#barra-sup .marca{display:flex;flex-direction:column;line-height:1.1;pointer-events:auto;margin-right:auto}
+#barra-sup .marca b{font-family:var(--font-d);font-size:16px;color:#fff;font-weight:600}
+#barra-sup .marca span{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--madera)}
+#barra-sup .btn{pointer-events:auto;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;
+  background:rgba(253,251,247,.12);border:1px solid rgba(253,251,247,.28);color:#fff;font-size:11.5px;
+  letter-spacing:.08em;text-transform:uppercase;font-weight:600;backdrop-filter:blur(4px)}
+#barra-sup .btn:hover{background:rgba(253,251,247,.22)}
+#barra-sup .btn[aria-pressed="true"]{background:var(--yerba);border-color:var(--yerba)}
+
+/* ---- letrero de zona (fundido) ---- */
+#letrero-zona{position:fixed;top:64px;left:50%;transform:translate(-50%,-8px);z-index:19;
+  padding:9px 22px;border-radius:999px;background:rgba(46,36,29,.72);color:#fff;
+  font-family:var(--font-d);font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  opacity:0;transition:opacity .5s ease,transform .5s ease;pointer-events:none;white-space:nowrap}
+#letrero-zona.visible{opacity:1;transform:translate(-50%,0)}
+
+/* ---- ayuda ---- */
+#panel-ayuda{position:fixed;top:60px;right:14px;z-index:20;width:230px;background:rgba(253,251,247,.96);
+  border:1px solid var(--linea);border-radius:12px;padding:14px 16px;font-size:12px;line-height:1.7;
+  box-shadow:0 20px 40px -24px rgba(0,0,0,.5);transition:opacity .2s,transform .2s}
+#panel-ayuda.oculto{opacity:0;pointer-events:none;transform:translateY(-6px)}
+#panel-ayuda h4{margin:0 0 8px;font-family:var(--font-d);font-size:14px;color:var(--yerba)}
+#panel-ayuda b{color:var(--cafe)}
+#panel-ayuda .cerrar{position:absolute;top:8px;right:10px;font-size:16px;color:var(--tinta-sv)}
+
+/* ---- joystick móvil ---- */
+#joystick{position:fixed;left:22px;bottom:22px;z-index:20;width:110px;height:110px;border-radius:50%;
+  background:rgba(253,251,247,.14);border:1px solid rgba(253,251,247,.3);display:none;touch-action:none}
+#joystick.activo{display:block}
+#joystick .palo{position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;
+  background:rgba(253,251,247,.85);transform:translate(-50%,-50%)}
+
+/* ---- minimapa ---- */
+#minimapa-cont{position:fixed;right:14px;bottom:14px;z-index:20;border-radius:12px;overflow:hidden;
+  border:2px solid rgba(253,251,247,.5);box-shadow:0 16px 34px -18px rgba(0,0,0,.6)}
+#minimapa{display:block;background:#20140c}
+
+/* ---- tooltip flotante (raycaster) ---- */
+#tooltip{position:fixed;z-index:25;padding:5px 11px;border-radius:999px;background:var(--tinta);color:#fff;
+  font-size:11.5px;letter-spacing:.05em;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap;
+  transform:translate(-50%,-130%)}
+#tooltip.visible{opacity:1}
+
+/* ---- panel de diálogo NPC ---- */
+#dialogo-fondo{position:fixed;inset:0;z-index:40;background:rgba(20,14,9,.55);display:none;
+  align-items:flex-end;justify-content:center;padding:18px}
+#dialogo-fondo.abierto{display:flex}
+#panel-dialogo{width:min(460px,100%);background:var(--crema);border:1px solid var(--linea);border-radius:16px 16px 8px 8px;
+  padding:20px 22px;box-shadow:0 -20px 60px -20px rgba(0,0,0,.5);animation:subir .3s ease both}
+@keyframes subir{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+#panel-dialogo .npc-cab{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+#panel-dialogo .npc-av{width:40px;height:40px;border-radius:50%;flex:none}
+#panel-dialogo .npc-nom{font-family:var(--font-d);font-weight:600;font-size:16px;line-height:1.1}
+#panel-dialogo .npc-sub{font-size:11px;color:var(--tinta-sv);letter-spacing:.04em}
+#panel-dialogo .npc-msg{font-size:14.5px;line-height:1.5;margin:0 0 14px}
+#lista-opciones{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.op-dialogo{text-align:left;padding:11px 14px;border:1px solid var(--linea);border-radius:10px;background:#fff;
+  font-size:13px;transition:border-color .15s,background .15s}
+.op-dialogo:hover{border-color:var(--yerba);background:var(--crema-2)}
+#acciones-dialogo{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn-dlg{padding:10px 16px;border-radius:999px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  font-weight:700;border:1px solid var(--linea)}
+.btn-dlg.primario{background:var(--yerba);border-color:var(--yerba);color:#fff}
+.btn-dlg.secundario{background:#fff;color:var(--cafe)}
+#leyenda-dialogo{margin-top:12px;font-size:10px;color:var(--tinta-sv);opacity:.75;line-height:1.4}
+
+/* ---- toast ---- */
+#toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);z-index:60;padding:11px 20px;
+  border-radius:999px;background:var(--yerba);color:#fff;font-size:12.5px;letter-spacing:.04em;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none}
+#toast.visible{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:640px){
+  #panel-ayuda{display:none}
+  #minimapa-cont{transform:scale(.82);transform-origin:bottom right}
+}
+</style>
+</head>
+<body>
+
+<canvas id="lienzo"></canvas>
+
+<!-- pantalla de carga -->
+<div id="carga">
+  <h1>Mate &amp; Café</h1>
+  <p>Preparando el recorrido virtual</p>
+  <div class="barra-carga"><i id="barra-carga-i"></i></div>
+  <small id="carga-txt">Cargando…</small>
+</div>
+
+<!-- barra superior -->
+<div id="barra-sup">
+  <div class="marca"><b>Mate &amp; Café</b><span>Recorrido virtual 3D</span></div>
+  <button class="btn" id="btn-camara" aria-pressed="false">Cámara: 3ª persona</button>
+  <button class="btn" id="btn-ayuda-toggle">Ayuda (H)</button>
+</div>
+
+<div id="letrero-zona"></div>
+
+<!-- ayuda -->
+<div id="panel-ayuda" class="oculto">
+  <span class="cerrar" id="ayuda-cerrar">✕</span>
+  <h4>Controles</h4>
+  <div><b>WASD / flechas</b> — caminar</div>
+  <div><b>Shift</b> — correr</div>
+  <div><b>Click en el piso</b> — ir hasta ahí</div>
+  <div><b>Arrastrar (modo órbita)</b> — girar cámara</div>
+  <div><b>Botón cámara</b> — 3ª persona ⇄ órbita</div>
+  <div><b>F</b> — pantalla completa</div>
+  <div><b>H</b> — mostrar/ocultar ayuda</div>
+</div>
+
+<!-- joystick móvil -->
+<div id="joystick"><div class="palo" id="joystick-palo"></div></div>
+
+<!-- minimapa -->
+<div id="minimapa-cont"><canvas id="minimapa" width="150" height="176"></canvas></div>
+
+<div id="tooltip"></div>
+
+<!-- diálogo NPC -->
+<div id="dialogo-fondo">
+  <div id="panel-dialogo">
+    <div class="npc-cab">
+      <div class="npc-av" id="dlg-avatar"></div>
+      <div><div class="npc-nom" id="dlg-nombre"></div><div class="npc-sub" id="dlg-subtitulo"></div></div>
+    </div>
+    <p class="npc-msg" id="dlg-mensaje"></p>
+    <div id="lista-opciones"></div>
+    <div id="acciones-dialogo"></div>
+    <div id="leyenda-dialogo"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+/* ============================================================
+   1. CONFIGURACIÓN
+   ============================================================ */
+const cfg = {
+  anchoX: 20,          // ancho del local (eje X), metros
+  profundoZ: 24,        // profundidad del local (eje Z), metros
+  muroAltoNormal: 3.2,
+  muroAltoSalon: 4.2,   // el salón/coworking tiene doble altura
+  velCaminar: 1.7,
+  velCorrer: 3.4,
+  radioInteraccionNPC: 2.5
+};
+
+const canvas = document.getElementById("lienzo");
+const reloj = new THREE.Clock();
+
+/* ============================================================
+   2. PALETA — identidad Mate & Café
+   ============================================================ */
+const PAL = {
+  fondo:        "#2A1E14",
+  niebla:       "#3B2A1C",
+  pisoBoutique: "#EFEAE1",
+  pisoEstacion: "#E4DCCF",
+  pisoCafeteria:"#D9C7AE",
+  pisoSalon:    "#CBB89D",
+  muro:         "#F4EEE4",
+  zocalo:       "#A98D74",
+  madera:       "#C8B29B",
+  maderaOsc:    "#8A6B4E",
+  cafe:         "#5C4033",
+  cafeClaro:    "#7A5A48",
+  yerba:        "#3B5E2B",
+  yerbaClaro:   "#8BA870",
+  acero:        "#9AA0A3",
+  cuero:        "#9C6B43",
+  tiza:         "#FDFBF7",
+  vidrio:       "#CFE7E2",
+  latonCalido:  "#D9A441"
+};
+
+/* ============================================================
+   3. DATOS DEL PLANO — zonas, mobiliario, waypoints, diálogos
+   Todo como arrays/objetos de datos: agregar una zona o un
+   personaje nuevo no debería requerir tocar la lógica de abajo.
+   ============================================================ */
+const ZONAS = [
+  { id:"boutique",  nombre:"Boutique de Mate",            x:[0,20],   z:[0,6.1],   piso:PAL.pisoBoutique  },
+  { id:"estacion",  nombre:"Armá Tu Mate",                x:[0,9.2],  z:[6.1,13.5],piso:PAL.pisoEstacion  },
+  { id:"cafeteria", nombre:"Cafetería",                   x:[9.2,20], z:[6.1,13.5],piso:PAL.pisoCafeteria },
+  { id:"salon",     nombre:"Salón & Coworking",           x:[0,20],   z:[13.5,24], piso:PAL.pisoSalon, altoDoble:true }
+];
+
+function zonaDe(x, z){
+  for(const zn of ZONAS){
+    if(x>=zn.x[0] && x<=zn.x[1] && z>=zn.z[0] && z<=zn.z[1]) return zn;
+  }
+  return null;
+}
+
+// mobiliario: {zona, tipo, x:[a,b], z:[a,b], alto, solido, etiqueta}
+const MOBILIARIO = [
+  // -------- Boutique de Mate --------
+  { zona:"boutique",  tipo:"puertaVidrio", x:[8,12],     z:[0,0.15],   alto:2.4, solido:false, etiqueta:"Acceso" },
+  { zona:"boutique",  tipo:"estanteria",   x:[0.3,1.3],  z:[0.8,5.3],  alto:2.3, solido:true,  etiqueta:"Estantería iluminada" },
+  { zona:"boutique",  tipo:"estanteria",   x:[18.7,19.7],z:[0.8,5.3],  alto:2.3, solido:true,  etiqueta:"Estantería iluminada" },
+  { zona:"boutique",  tipo:"vitrina",      x:[2.2,5.4],  z:[1.5,3.1],  alto:1.3, solido:true,  etiqueta:"Vitrina de mates" },
+  { zona:"boutique",  tipo:"vitrina",      x:[14.2,17.6],z:[1.5,3.1],  alto:1.4, solido:true,  etiqueta:"Vitrina de termos" },
+  { zona:"boutique",  tipo:"mesaExhibicion",x:[7,13],    z:[2.2,3.6],  alto:0.85,solido:true,  etiqueta:"Mesa de exhibición" },
+  { zona:"boutique",  tipo:"planta",       x:[2,3],      z:[4.4,5.4],  alto:1.7, solido:false },
+  { zona:"boutique",  tipo:"planta",       x:[17,18],    z:[4.4,5.4],  alto:1.7, solido:false },
+  { zona:"boutique",  tipo:"cartel",       x:[0.1,0.25], z:[1,3.4],    alto:1.8, solido:false, etiqueta:"Mate & Café" },
+  // -------- Estación Armá Tu Mate --------
+  { zona:"estacion",  tipo:"estanteria",   x:[0.3,1.3],  z:[6.5,11.5], alto:2.1, solido:true,  etiqueta:"Blends de yerba" },
+  { zona:"estacion",  tipo:"vitrina",      x:[1.7,6.8],  z:[6.5,7.5],  alto:1.0, solido:true,  etiqueta:"Mates en exhibición" },
+  { zona:"estacion",  tipo:"mostrador",    x:[1.5,7.9],  z:[8.6,10.3], alto:1.05,solido:true,  etiqueta:"Armá tu mate" },
+  { zona:"estacion",  tipo:"banqueta",     x:[2.0,2.5],  z:[11.0,11.5],alto:0.75,solido:false },
+  { zona:"estacion",  tipo:"banqueta",     x:[3.6,4.1],  z:[11.0,11.5],alto:0.75,solido:false },
+  { zona:"estacion",  tipo:"banqueta",     x:[5.2,5.7],  z:[11.0,11.5],alto:0.75,solido:false },
+  { zona:"estacion",  tipo:"mesaCata",     x:[4.6,8.6],  z:[11.7,13.0],alto:0.8, solido:true,  etiqueta:"Mesa de cata" },
+  { zona:"estacion",  tipo:"planta",       x:[0.6,1.6],  z:[12.3,13.3],alto:1.7, solido:false },
+  // -------- Cafetería --------
+  { zona:"cafeteria", tipo:"estanteria",   x:[18.9,19.8],z:[6.6,12.2], alto:2.1, solido:true,  etiqueta:"Estantería de barra" },
+  { zona:"cafeteria", tipo:"vitrina",      x:[10.4,14.6],z:[7.1,8.3],  alto:1.3, solido:true,  etiqueta:"Vitrina de pastelería" },
+  { zona:"cafeteria", tipo:"maquinaCafe",  x:[15.1,17.3],z:[7.1,8.4],  alto:1.4, solido:true,  etiqueta:"Máquina de café" },
+  { zona:"cafeteria", tipo:"caja",         x:[17.9,19.1],z:[7.1,8.1],  alto:1.15,solido:true,  etiqueta:"Caja" },
+  { zona:"cafeteria", tipo:"barra",        x:[10.4,19.4],z:[9.2,10.6], alto:1.15,solido:true,  etiqueta:"Barra" },
+  { zona:"cafeteria", tipo:"banqueta",     x:[11.0,11.5],z:[11.2,11.7],alto:0.75,solido:false },
+  { zona:"cafeteria", tipo:"banqueta",     x:[12.6,13.1],z:[11.2,11.7],alto:0.75,solido:false },
+  { zona:"cafeteria", tipo:"banqueta",     x:[14.2,14.7],z:[11.2,11.7],alto:0.75,solido:false, id:"banquetaBarista" },
+  { zona:"cafeteria", tipo:"banqueta",     x:[15.8,16.3],z:[11.2,11.7],alto:0.75,solido:false },
+  { zona:"cafeteria", tipo:"planta",       x:[9.6,10.6], z:[12.2,13.2],alto:1.7, solido:false },
+  // -------- Salón & Coworking --------
+  { zona:"salon",     tipo:"sofa",         x:[0.8,6.2],  z:[14.2,16.4],alto:0.9, solido:true,  etiqueta:"Sofá lounge", id:"sofaLounge" },
+  { zona:"salon",     tipo:"mesaBaja",     x:[2.2,4.8],  z:[16.8,18.2],alto:0.42,solido:true },
+  { zona:"salon",     tipo:"mesa2",        x:[8.4,11.2], z:[14.4,16.2],alto:0.75,solido:true, etiqueta:"Mesa" },
+  { zona:"salon",     tipo:"silla",        x:[8.0,8.6],  z:[13.9,14.5],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[11.0,11.6],z:[13.9,14.5],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[8.0,8.6],  z:[16.1,16.7],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[11.0,11.6],z:[16.1,16.7],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"mesa2",        x:[13.6,16.4],z:[14.4,16.2],alto:0.75,solido:true, etiqueta:"Mesa" },
+  { zona:"salon",     tipo:"silla",        x:[13.2,13.8],z:[13.9,14.5],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[16.2,16.8],z:[13.9,14.5],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[13.2,13.8],z:[16.1,16.7],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[16.2,16.8],z:[16.1,16.7],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"box",          x:[16.5,19.6],z:[17.0,19.8],alto:1.2, solido:true,  etiqueta:"Box de trabajo" },
+  { zona:"salon",     tipo:"barraEnchufes",x:[0.2,1.2],  z:[18.6,23.4],alto:1.05,solido:true,  etiqueta:"Barra con enchufes" },
+  { zona:"salon",     tipo:"banqueta",     x:[1.6,2.1],  z:[19.4,19.9],alto:0.75,solido:false },
+  { zona:"salon",     tipo:"banqueta",     x:[1.6,2.1],  z:[21.4,21.9],alto:0.75,solido:false },
+  { zona:"salon",     tipo:"mesaComunitaria",x:[6.4,15.2],z:[20.6,22.6],alto:0.8, solido:true, etiqueta:"Mesa comunitaria" },
+  { zona:"salon",     tipo:"silla",        x:[7.4,8.0],  z:[20.0,20.6],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[9.6,10.2], z:[20.0,20.6],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[11.8,12.4],z:[20.0,20.6],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[14.0,14.6],z:[20.0,20.6],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[7.4,8.0],  z:[22.6,23.2],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[9.6,10.2], z:[22.6,23.2],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[11.8,12.4],z:[22.6,23.2],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"silla",        x:[14.0,14.6],z:[22.6,23.2],alto:0.8, solido:false },
+  { zona:"salon",     tipo:"planta",       x:[18.4,19.6],z:[22.4,23.6],alto:2.0, solido:false }
+];
+
+// waypoints por persona ambiental (dentro de cada zona, respetando el mobiliario)
+const CIRCUITOS_PERSONAS = [
+  { ropa:"#9C6B43", piel:"#C79A73", vel:1.0, puntos:[[9.5,1.0],[8.4,3.0],[10.8,3.0]] },                     // boutique A
+  { ropa:"#3B5E2B", piel:"#8A5A3C", vel:0.85,puntos:[[15.5,2.0],[17.6,4.6],[13.6,4.6]] },                    // boutique B
+  { ropa:"#7A5A48", piel:"#D8B08C", vel:0.9, puntos:[[3.4,7.2],[6.2,8.8],[4.0,10.4]] },                      // estación A (mostrador)
+  { ropa:"#8BA870", piel:"#C79A73", vel:0.8, puntos:[[6.6,11.9],[5.0,12.8],[7.6,12.9]] },                    // estación B (mesa de cata)
+  { ropa:"#D9A441", piel:"#8A5A3C", vel:1.1, puntos:[[4.0,9.8],[9.8,8.6],[13.4,10.0],[9.8,8.6]] },           // cruza estación <-> cafetería
+  { ropa:"#5C4033", piel:"#C79A73", vel:0.9, puntos:[[12.0,9.9],[16.6,9.9],[13.2,7.8]] },                    // cafetería A (barra)
+  { ropa:"#8A8F92", piel:"#D8B08C", vel:0.85,puntos:[[11.2,8.0],[13.8,7.3],[10.8,10.6]] },                   // cafetería B (vitrina)
+  { ropa:"#6D8A55", piel:"#8A5A3C", vel:1.0, puntos:[[9.0,15.2],[13.0,15.2],[10.8,21.4],[9.0,15.2]] }        // salón (mesas)
+];
+const PERSONAS_SENTADAS = [
+  { ropa:"#9C6B43", piel:"#D8B08C", pos:[2.4,15.15,0], rotY:0.3, mueble:"sofaLounge" },
+  { ropa:"#3B5E2B", piel:"#8A5A3C", pos:[14.45,11.45,0], rotY:Math.PI, mueble:"banquetaBarista" }
+];
+
+// diálogos predeterminados de los dos personajes fijos que hablan
+const DIALOGOS = {
+  vendedora: {
+    nombre:"Mariana",
+    subtitulo:"Especialista en mate · Estación Armá Tu Mate",
+    color: PAL.yerba,
+    saludo:"¡Hola! Bienvenido a la estación. Contame qué tenés ganas de armar hoy.",
+    opciones:[
+      { id:"o1", texto:"¿Qué mate me conviene si recién empiezo?",
+        respuesta:"Para arrancar recomendamos calabaza imperial o cerámica esmaltada: son fáciles de curar y de mantener. El torpedo de acero es la opción cero mantenimiento si no querés curar nada." },
+      { id:"o2", texto:"¿Cómo elijo el blend de yerba?",
+        respuesta:"Depende del momento del día: la serrana suave es liviana para tardes largas, la barbacuá ahumada tiene más cuerpo, y la cítrica del litoral refresca. Podés probar las tres en la mesa de cata." },
+      { id:"o3", texto:"¿Las bombillas se pueden lavar en lavavajillas?",
+        respuesta:"La de acero desarmable sí, porque se abre en dos partes. La de alpaca y la de bambú se lavan a mano con agua tibia para no dañar el acabado." },
+      { id:"o4", texto:"Solo estoy conociendo el lugar",
+        respuesta:"Dale, mirá tranquilo. Acá armamos tu mate paso a paso: elegís el mate, el blend, la bombilla y los accesorios, y te lo llevás listo o lo tomás en el salón." }
+    ],
+    accion:{ texto:"Agregar a mi kit", aviso:"Agregado a tu kit — te esperamos en la Estación" },
+    leyenda:"Contenido de demostración — precios, stock y disponibilidad son ilustrativos."
+  },
+  barista: {
+    nombre:"Facu",
+    subtitulo:"Barista de especialidad · Cafetería",
+    color: PAL.cafe,
+    saludo:"¿Qué te preparo hoy? Tenemos café de especialidad, tés y pastelería recién horneada.",
+    opciones:[
+      { id:"o1", texto:"¿Qué café me recomendás?",
+        respuesta:"El de autor de este mes tiene notas a caramelo y frutos secos, va muy bien en flat white. Si preferís algo más suave, el filtrado de la casa es más liviano." },
+      { id:"o2", texto:"¿Tienen opciones sin lactosa o veganas?",
+        respuesta:"Sí, tenemos leche de avena y de almendras sin cargo extra, y la pastelería de la vitrina indica cuáles son veganas con una etiqueta verde." },
+      { id:"o3", texto:"¿Qué tés e infusiones tienen?",
+        respuesta:"Manejamos una carta de tés de hoja suelta: verde, negro, rooibos y una manzanilla con menta que es la más pedida a la tarde." },
+      { id:"o4", texto:"Solo estoy conociendo el lugar",
+        respuesta:"Perfecto, tomate tu tiempo. La barra está siempre abierta y la caja de acá cobra tanto la cafetería como la boutique de mate." }
+    ],
+    accion:{ texto:"Pedir en la barra", aviso:"Pedido enviado a la barra — pasá a retirarlo" },
+    leyenda:"Contenido de demostración — precios y disponibilidad son ilustrativos."
+  }
+};
+
+const NPCS = [
+  { key:"vendedora", zona:"estacion",  pos:[4.6,0,9.1], rotY:0.5, bata:"#EFEAE1", pelo:"#3B2A1C" },
+  { key:"barista",   zona:"cafeteria", pos:[16.2,0,8.9], rotY:-0.6, bata:"#EFEAE1", pelo:"#5C4033" }
+];
+
+/* ============================================================
+   4. MATERIALES
+   ============================================================ */
+function texturaMadera(colorBase, colorVeta){
+  const c = document.createElement("canvas"); c.width = 128; c.height = 128;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = colorBase; ctx.fillRect(0,0,128,128);
+  ctx.strokeStyle = colorVeta; ctx.globalAlpha = 0.35;
+  for(let i=0;i<14;i++){
+    ctx.beginPath(); ctx.lineWidth = 1 + Math.random()*1.5;
+    const y = i*9 + Math.random()*4;
+    ctx.moveTo(0,y); ctx.bezierCurveTo(40,y+6,88,y-6,128,y); ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2,2);
+  return tex;
+}
+function texturaPiso(colorBase, colorLinea){
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = colorBase; ctx.fillRect(0,0,256,256);
+  ctx.strokeStyle = colorLinea; ctx.globalAlpha = 0.5; ctx.lineWidth = 2;
+  for(let i=0;i<=256;i+=64){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,256); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(256,i); ctx.stroke(); }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(cfg.anchoX/3, cfg.profundoZ/3);
+  return tex;
+}
+
+const MAT = {
+  muro:     new THREE.MeshStandardMaterial({ color: PAL.muro, roughness:0.92 }),
+  zocalo:   new THREE.MeshStandardMaterial({ color: PAL.zocalo, roughness:0.85 }),
+  madera:   new THREE.MeshStandardMaterial({ map: texturaMadera(PAL.madera, PAL.maderaOsc), roughness:0.75 }),
+  maderaOsc:new THREE.MeshStandardMaterial({ map: texturaMadera(PAL.maderaOsc, "#5C4033"), roughness:0.7 }),
+  cafe:     new THREE.MeshStandardMaterial({ color: PAL.cafe, roughness:0.6 }),
+  yerba:    new THREE.MeshStandardMaterial({ color: PAL.yerba, roughness:0.55 }),
+  cuero:    new THREE.MeshStandardMaterial({ color: PAL.cuero, roughness:0.65 }),
+  acero:    new THREE.MeshStandardMaterial({ color: PAL.acero, roughness:0.35, metalness:0.6 }),
+  vidrio:   new THREE.MeshPhysicalMaterial({ color: PAL.vidrio, transparent:true, opacity:0.28, roughness:0.05, metalness:0, transmission:0.4 }),
+  laton:    new THREE.MeshStandardMaterial({ color: PAL.latonCalido, roughness:0.3, metalness:0.75, emissive:PAL.latonCalido, emissiveIntensity:0.15 }),
+  tiza:     new THREE.MeshStandardMaterial({ color: PAL.tiza, roughness:0.8 }),
+  tela:     new THREE.MeshStandardMaterial({ color: "#B8794F", roughness:0.9 }),
+  hoja:     new THREE.MeshStandardMaterial({ color: PAL.yerbaClaro, roughness:0.8 })
+};
+function pisoMat(colorBase){ return new THREE.MeshStandardMaterial({ map: texturaPiso(colorBase, "#00000022"), roughness:0.85 }); }
+
+/* ============================================================
+   5. CONSTRUCTORES DE GEOMETRÍA (todo por código, sin assets)
+   ============================================================ */
+function caja(w,h,d, material){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), material);
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+function cilindro(rt,rb,h, material, seg=16){
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg), material);
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+function esfera(r, material, seg=16){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r,seg,seg*0.7), material);
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+function centroX(rango){ return (rango[0]+rango[1])/2; }
+function centroZ(rango){ return (rango[0]+rango[1])/2; }
+function ancho(rango){ return rango[1]-rango[0]; }
+
+/* mate de utilería (decoración sobre estantes/mesas) */
+function mateUtileria(escala, colorCuerpo){
+  const g = new THREE.Group();
+  const cuerpo = esfera(1, new THREE.MeshStandardMaterial({color:colorCuerpo,roughness:0.7}));
+  cuerpo.scale.set(1,0.95,1); cuerpo.position.y = 1; g.add(cuerpo);
+  const borde = cilindro(1.02,0.92,0.28, MAT.madera); borde.position.y = 1.85; g.add(borde);
+  const bombilla = cilindro(0.1,0.1,2.1, MAT.acero); bombilla.position.set(0.5,2.3,0); bombilla.rotation.z = -0.4; g.add(bombilla);
+  g.scale.setScalar(escala); return g;
+}
+
+/* ============================================================
+   6. CONSTRUCCIÓN DE LA ESCENA
+   ============================================================ */
+const escena = new THREE.Scene();
+escena.background = new THREE.Color(PAL.fondo);
+escena.fog = new THREE.FogExp2(PAL.niebla, 0.028);
+
+const raiz = new THREE.Group();
+escena.add(raiz);
+
+function construirPiso(){
+  ZONAS.forEach(zn=>{
+    const w = ancho(zn.x), d = ancho(zn.z);
+    const piso = new THREE.Mesh(new THREE.BoxGeometry(w,0.2,d), pisoMat(zn.piso));
+    piso.position.set(centroX(zn.x), -0.1, centroZ(zn.z));
+    piso.receiveShadow = true;
+    raiz.add(piso);
+  });
+}
+
+function construirMuros(){
+  const grosor = 0.2;
+  const alto = (zn)=> zn && zn.altoDoble ? cfg.muroAltoSalon : cfg.muroAltoNormal;
+  // perímetro exterior, con hueco de puerta al frente
+  const segmentosFrente = [[0,8],[12,cfg.anchoX]]; // deja el hueco de la puerta [8,12]
+  segmentosFrente.forEach(seg=>{
+    const w = seg[1]-seg[0];
+    if(w<=0) return;
+    const m = caja(w, cfg.muroAltoNormal, grosor, MAT.muro);
+    m.position.set((seg[0]+seg[1])/2, cfg.muroAltoNormal/2, 0);
+    raiz.add(m);
+  });
+  // muro trasero (salón, doble altura)
+  const trasero = caja(cfg.anchoX, cfg.muroAltoSalon, grosor, MAT.muro);
+  trasero.position.set(cfg.anchoX/2, cfg.muroAltoSalon/2, cfg.profundoZ);
+  raiz.add(trasero);
+  // muros laterales por tramos (altura variable según zona)
+  const tramosZ = [ [0,6.1,cfg.muroAltoNormal], [6.1,13.5,cfg.muroAltoNormal], [13.5,cfg.profundoZ,cfg.muroAltoSalon] ];
+  [0, cfg.anchoX].forEach(x=>{
+    tramosZ.forEach(tr=>{
+      const d = tr[1]-tr[0];
+      const m = caja(grosor, tr[2], d, MAT.muro);
+      m.position.set(x, tr[2]/2, (tr[0]+tr[1])/2);
+      raiz.add(m);
+    });
+  });
+  // zócalo perimetral
+  const zoc1 = caja(cfg.anchoX, 0.25, grosor, MAT.zocalo); zoc1.position.set(cfg.anchoX/2,0.125,0); raiz.add(zoc1);
+  const zoc2 = caja(cfg.anchoX, 0.25, grosor, MAT.zocalo); zoc2.position.set(cfg.anchoX/2,0.125,cfg.profundoZ); raiz.add(zoc2);
+  // vigas de techo del salón, cada 4 m (detalle de coworking)
+  for(let x=2; x<cfg.anchoX; x+=4){
+    const viga = caja(0.25, 0.25, ancho([13.5,cfg.profundoZ]), MAT.maderaOsc);
+    viga.position.set(x, cfg.muroAltoSalon-0.2, (13.5+cfg.profundoZ)/2);
+    raiz.add(viga);
+  }
+}
+
+const cajasSolidas = []; // Box3 de mobiliario/muros para colisión
+
+function construirMobiliario(){
+  MOBILIARIO.forEach(p=>{
+    const w = ancho(p.x), d = ancho(p.z), h = p.alto;
+    const cx = centroX(p.x), cz = centroZ(p.z);
+    const g = new THREE.Group();
+    g.position.set(cx, 0, cz);
+    raiz.add(g);
+
+    switch(p.tipo){
+      case "puertaVidrio": {
+        const marco = caja(w+0.5, h+0.4, 0.15, MAT.maderaOsc); marco.position.y = (h+0.4)/2; g.add(marco);
+        const vidrio = caja(w-0.3, h-0.3, 0.05, MAT.vidrio); vidrio.position.y = h/2; vidrio.castShadow=false; g.add(vidrio);
+        break; }
+      case "estanteria": {
+        const cuerpo = caja(w,h,d, MAT.madera); cuerpo.position.y = h/2; g.add(cuerpo);
+        for(let i=1;i<=3;i++){
+          const y = h*i/4;
+          const estante = caja(w-0.2, 0.06, d-0.15, MAT.maderaOsc); estante.position.set(0,y,0); g.add(estante);
+          const mv = mateUtileria(0.5, i%2? PAL.yerba : PAL.cuero); mv.position.set(-w*0.2, y+0.1, 0); g.add(mv);
+        }
+        break; }
+      case "vitrina": {
+        const base = caja(w,h*0.4,d, MAT.maderaOsc); base.position.y = h*0.2; g.add(base);
+        const vidrio = caja(w,h*0.6,d, MAT.vidrio); vidrio.position.y = h*0.7; vidrio.castShadow=false; g.add(vidrio);
+        const tapa = caja(w+0.15,0.08,d+0.15, MAT.maderaOsc); tapa.position.y = h; g.add(tapa);
+        break; }
+      case "mesaExhibicion": {
+        const tapa = caja(w,0.1,d, MAT.madera); tapa.position.y = h; g.add(tapa);
+        [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(s=>{
+          const pata = cilindro(0.05,0.05,h,MAT.acero); pata.position.set(s[0]*(w/2-0.3),h/2,s[1]*(d/2-0.3)); g.add(pata);
+        });
+        for(let i=0;i<3;i++){ const mv = mateUtileria(0.6, i%2?PAL.cafe:PAL.yerba); mv.position.set(-w*0.3+i*w*0.3, h, 0); g.add(mv); }
+        break; }
+      case "mostrador": case "barra": case "caja": {
+        const cuerpo = caja(w,h-0.3,d, MAT.madera); cuerpo.position.y=(h-0.3)/2; g.add(cuerpo);
+        const tapa = caja(w+0.15,0.15,d+0.15, MAT.maderaOsc); tapa.position.y=h; g.add(tapa);
+        break; }
+      case "maquinaCafe": {
+        const cuerpo = caja(w,h*0.65,d, MAT.acero); cuerpo.position.y = h*0.325; g.add(cuerpo);
+        const campana = caja(w*0.85,h*0.3,d*0.75, new THREE.MeshStandardMaterial({color:"#7A5A48",roughness:0.5})); campana.position.y=h*0.8; g.add(campana);
+        for(let i=0;i<2;i++){ const pico = cilindro(0.03,0.03,0.35, MAT.acero); pico.position.set(-w*0.2+i*w*0.4,h*0.6,d/2-0.1); g.add(pico); }
+        break; }
+      case "mesaCata": case "mesa2": case "mesaComunitaria": case "mesaBaja": {
+        const tapa = caja(w,0.08,d, MAT.madera); tapa.position.y = h; g.add(tapa);
+        [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(s=>{
+          const pata = cilindro(0.05,0.05,h,MAT.maderaOsc); pata.position.set(s[0]*(w/2-0.25),h/2,s[1]*(d/2-0.25)); g.add(pata);
+        });
+        if(p.tipo!=="mesaBaja"){ const jarra = mateUtileria(0.45, PAL.yerba); jarra.position.set(0,h,0); g.add(jarra); }
+        break; }
+      case "banqueta": {
+        const asiento = cilindro(d/2,d/2,0.1, MAT.cuero); asiento.position.y = h; g.add(asiento);
+        const pie = cilindro(0.06,0.09,h-0.1, MAT.acero); pie.position.y=(h-0.1)/2; g.add(pie);
+        const aro = new THREE.Mesh(new THREE.TorusGeometry(d/2*0.7,0.03,8,20), MAT.acero); aro.rotation.x=Math.PI/2; aro.position.y=h*0.4; g.add(aro);
+        break; }
+      case "silla": {
+        const asiento = caja(w,0.08,d, MAT.madera); asiento.position.y = h*0.55; g.add(asiento);
+        const respaldo = caja(w,h*0.5,0.06, MAT.madera); respaldo.position.set(0,h*0.78,-d/2+0.05); g.add(respaldo);
+        [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(s=>{
+          const pata = cilindro(0.03,0.03,h*0.55, MAT.maderaOsc); pata.position.set(s[0]*(w/2-0.05),h*0.275,s[1]*(d/2-0.05)); g.add(pata);
+        });
+        break; }
+      case "sofa": {
+        const base = caja(w,h*0.45,d, MAT.tela); base.position.y=h*0.225; g.add(base);
+        const respaldo = caja(w,h*0.65,d*0.22, MAT.tela); respaldo.position.set(0,h*0.65,-d/2+d*0.11); g.add(respaldo);
+        const brazo1 = caja(w*0.12,h*0.55,d, MAT.tela); brazo1.position.set(-w/2+w*0.06,h*0.55,0); g.add(brazo1);
+        const brazo2 = brazo1.clone(); brazo2.position.x = w/2-w*0.06; g.add(brazo2);
+        break; }
+      case "box": {
+        const base = caja(w,h,d, MAT.cuero); base.position.y = h/2; base.material = new THREE.MeshStandardMaterial({color:PAL.cuero,roughness:0.8,transparent:true,opacity:0.9}); g.add(base);
+        const mesaBox = caja(w*0.7,0.06,d*0.5, MAT.madera); mesaBox.position.set(0,0.75,0); g.add(mesaBox);
+        break; }
+      case "barraEnchufes": {
+        const cuerpo = caja(w,h,d, MAT.maderaOsc); cuerpo.position.y=h/2; g.add(cuerpo);
+        const tapa = caja(w+0.1,0.06,d+0.1, MAT.madera); tapa.position.y=h; g.add(tapa);
+        break; }
+      case "planta": {
+        const maceta = cilindro(0.28,0.22,0.4, MAT.cuero); maceta.position.y=0.2; g.add(maceta);
+        const tallo = cilindro(0.04,0.04,h*0.5, MAT.maderaOsc); tallo.position.y=h*0.45; g.add(tallo);
+        const follaje = esfera(0.55, MAT.hoja); follaje.position.y=h*0.85; follaje.scale.y=0.8; g.add(follaje);
+        const follaje2 = esfera(0.35, MAT.hoja); follaje2.position.set(0.3,h*0.7,-0.2); g.add(follaje2);
+        break; }
+      case "cartel": {
+        const panel = caja(0.08,d,0.4, MAT.yerba); panel.rotation.y=Math.PI/2; panel.position.y=alto_seguro(p.alto); g.add(panel);
+        const luz = new THREE.PointLight(PAL.latonCalido, 0.6, 3);
+        luz.position.set(0.3, p.alto, 0); g.add(luz);
+        break; }
+    }
+    function alto_seguro(a){ return a; }
+
+    if(p.solido){
+      const caja3 = new THREE.Box3(
+        new THREE.Vector3(p.x[0]-0.05, 0, p.z[0]-0.05),
+        new THREE.Vector3(p.x[1]+0.05, h+0.3, p.z[1]+0.05)
+      );
+      cajasSolidas.push(caja3);
+      if(p.id) muebleRefs[p.id] = { box:caja3, centro:new THREE.Vector3(cx,0,cz) };
+    }
+  });
+}
+const muebleRefs = {};
+
+// paredes exteriores como cajas sólidas para colisión (grosor virtual)
+function construirColisionesMuro(){
+  const g = 0.35;
+  cajasSolidas.push(new THREE.Box3(new THREE.Vector3(0,0,-g), new THREE.Vector3(8,4.5,g)));
+  cajasSolidas.push(new THREE.Box3(new THREE.Vector3(12,0,-g), new THREE.Vector3(cfg.anchoX,4.5,g)));
+  cajasSolidas.push(new THREE.Box3(new THREE.Vector3(0,0,cfg.profundoZ-g), new THREE.Vector3(cfg.anchoX,4.5,cfg.profundoZ+g)));
+  cajasSolidas.push(new THREE.Box3(new THREE.Vector3(-g,0,0), new THREE.Vector3(g,4.5,cfg.profundoZ)));
+  cajasSolidas.push(new THREE.Box3(new THREE.Vector3(cfg.anchoX-g,0,0), new THREE.Vector3(cfg.anchoX+g,4.5,cfg.profundoZ)));
+}
+
+function construirIluminacion(){
+  const hemi = new THREE.HemisphereLight("#EFEAE1", "#2A1E14", 0.75);
+  escena.add(hemi);
+
+  const sol = new THREE.DirectionalLight("#FFE3B0", 1.15);
+  sol.position.set(10, 12, -6);
+  sol.castShadow = true;
+  sol.shadow.mapSize.set(2048,2048);
+  sol.shadow.camera.left = -14; sol.shadow.camera.right = 14;
+  sol.shadow.camera.top = 16; sol.shadow.camera.bottom = -14;
+  sol.shadow.camera.near = 1; sol.shadow.camera.far = 40;
+  sol.shadow.bias = -0.0015;
+  escena.add(sol); escena.add(sol.target);
+  sol.target.position.set(10,0,12);
+
+  // luces cálidas colgantes sobre la barra y el mostrador
+  [[13.9,3,9.9],[4.7,3,9.4]].forEach(pos=>{
+    const p = new THREE.PointLight(PAL.latonCalido, 0.9, 6);
+    p.position.set(pos[0],pos[1],pos[2]);
+    escena.add(p);
+  });
+}
+
+function paso(pct, texto){
+  document.getElementById("barra-carga-i").style.width = pct+"%";
+  document.getElementById("carga-txt").textContent = texto;
+}
+
+paso(10,"Preparando la paleta…");
+construirPiso();
+paso(30,"Levantando muros…");
+construirMuros();
+construirColisionesMuro();
+paso(55,"Armando el mobiliario…");
+construirMobiliario();
+paso(75,"Encendiendo las luces…");
+construirIluminacion();
+
+/* ============================================================
+   7. PERSONAS
+   ============================================================ */
+function crearPersona(colorRopa, colorPiel){
+  const g = new THREE.Group();
+  const matRopa = new THREE.MeshStandardMaterial({ color: colorRopa, roughness:0.85 });
+  const matPiel = new THREE.MeshStandardMaterial({ color: colorPiel, roughness:0.8 });
+
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.16,0.55,4,8), matRopa);
+  torso.position.y = 1.02; torso.castShadow = true; g.add(torso);
+
+  const cabeza = esfera(0.15, matPiel); cabeza.position.y = 1.55; g.add(cabeza);
+
+  const brazoI = new THREE.Group(); brazoI.position.set(-0.24,1.28,0);
+  const bmI = caja(0.08,0.5,0.08, matRopa); bmI.position.y = -0.25; brazoI.add(bmI); g.add(brazoI);
+  const brazoD = new THREE.Group(); brazoD.position.set(0.24,1.28,0);
+  const bmD = caja(0.08,0.5,0.08, matRopa); bmD.position.y = -0.25; brazoD.add(bmD); g.add(brazoD);
+
+  const piernaI = new THREE.Group(); piernaI.position.set(-0.1,0.75,0);
+  const pmI = caja(0.09,0.6,0.09, new THREE.MeshStandardMaterial({color:"#33261C",roughness:0.9})); pmI.position.y=-0.3; piernaI.add(pmI); g.add(piernaI);
+  const piernaD = new THREE.Group(); piernaD.position.set(0.1,0.75,0);
+  const pmD = caja(0.09,0.6,0.09, new THREE.MeshStandardMaterial({color:"#33261C",roughness:0.9})); pmD.position.y=-0.3; piernaD.add(pmD); g.add(piernaD);
+
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow = true; } });
+  g.userData.partes = { torso, cabeza, brazoI, brazoD, piernaI, piernaD };
+  return g;
+}
+
+const personas = [];
+
+function crearPersonaAmbiental(circuito){
+  const modelo = crearPersona(circuito.ropa, circuito.piel);
+  const p0 = circuito.puntos[0];
+  modelo.position.set(p0[0], 0, p0[1]);
+  raiz.add(modelo);
+  personas.push({
+    modelo, puntos: circuito.puntos, idx:0, vel: circuito.vel,
+    pausaHasta: 0, sentado:false
+  });
+}
+CIRCUITOS_PERSONAS.forEach(crearPersonaAmbiental);
+
+PERSONAS_SENTADAS.forEach(cfgP=>{
+  const modelo = crearPersona(cfgP.ropa, cfgP.piel);
+  modelo.position.set(cfgP.pos[0], 0.42, cfgP.pos[2]);
+  modelo.rotation.y = cfgP.rotY;
+  modelo.userData.partes.piernaI.rotation.x = -Math.PI/2.3;
+  modelo.userData.partes.piernaD.rotation.x = -Math.PI/2.3;
+  raiz.add(modelo);
+  personas.push({ modelo, sentado:true, t0: Math.random()*10 });
+});
+
+/* el visitante: avatar controlable, color distinto a todos los demás */
+const avatar = crearPersona("#D9A441", "#E7C39A");
+avatar.position.set(10, 0, 1.2);
+raiz.add(avatar);
+const estadoAvatar = { destino:null, velActual:0, moviendo:false };
+
+/* ============================================================
+   8. NPCS Y DIÁLOGOS
+   ============================================================ */
+const npcObjetos = []; // {key, modelo, indicador, posicion}
+NPCS.forEach(def=>{
+  const modelo = crearPersona(def.bata, "#D8B08C");
+  modelo.position.set(def.pos[0], 0, def.pos[2]);
+  modelo.rotation.y = def.rotY;
+  modelo.userData.esInteractivo = true;
+  modelo.userData.nombre = DIALOGOS[def.key].nombre;
+  modelo.userData.npcKey = def.key;
+  raiz.add(modelo);
+
+  const indicador = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.14,0),
+    new THREE.MeshStandardMaterial({ color: PAL.latonCalido, emissive: PAL.latonCalido, emissiveIntensity:0.6, roughness:0.3, metalness:0.6 })
+  );
+  indicador.position.set(def.pos[0], 2.15, def.pos[2]);
+  raiz.add(indicador);
+
+  npcObjetos.push({ key:def.key, modelo, indicador, pos:new THREE.Vector3(def.pos[0],0,def.pos[2]) });
+});
+
+let dialogoAbierto = false, dialogoActualKey = null, dialogoOpcionActual = null;
+const elDialogoFondo = document.getElementById("dialogo-fondo");
+
+function abrirDialogo(key){
+  dialogoAbierto = true; dialogoActualKey = key; dialogoOpcionActual = null;
+  elDialogoFondo.classList.add("abierto");
+  pintarDialogo();
+}
+function cerrarDialogo(){
+  dialogoAbierto = false;
+  elDialogoFondo.classList.remove("abierto");
+}
+function pintarDialogo(){
+  const d = DIALOGOS[dialogoActualKey];
+  document.getElementById("dlg-avatar").style.background = d.color;
+  document.getElementById("dlg-nombre").textContent = d.nombre;
+  document.getElementById("dlg-subtitulo").textContent = d.subtitulo;
+  document.getElementById("leyenda-dialogo").textContent = d.leyenda;
+  const elMsg = document.getElementById("dlg-mensaje");
+  const elOps = document.getElementById("lista-opciones");
+  const elAcc = document.getElementById("acciones-dialogo");
+  elOps.innerHTML = ""; elAcc.innerHTML = "";
+
+  if(!dialogoOpcionActual){
+    elMsg.textContent = d.saludo;
+    d.opciones.forEach(op=>{
+      const b = document.createElement("button");
+      b.className = "op-dialogo"; b.textContent = op.texto;
+      b.onclick = ()=>{ dialogoOpcionActual = op.id; pintarDialogo(); };
+      elOps.appendChild(b);
+    });
+    const cerrarB = document.createElement("button");
+    cerrarB.className = "btn-dlg secundario"; cerrarB.textContent = "Cerrar";
+    cerrarB.onclick = cerrarDialogo;
+    elAcc.appendChild(cerrarB);
+  } else {
+    const op = d.opciones.find(o=>o.id===dialogoOpcionActual);
+    elMsg.textContent = op.respuesta;
+    const volver = document.createElement("button");
+    volver.className = "btn-dlg secundario"; volver.textContent = "Volver a preguntar";
+    volver.onclick = ()=>{ dialogoOpcionActual = null; pintarDialogo(); };
+    const accion = document.createElement("button");
+    accion.className = "btn-dlg primario"; accion.textContent = d.accion.texto;
+    accion.onclick = ()=>{ mostrarToast(d.accion.aviso); cerrarDialogo(); };
+    const cerrarB = document.createElement("button");
+    cerrarB.className = "btn-dlg secundario"; cerrarB.textContent = "Cerrar";
+    cerrarB.onclick = cerrarDialogo;
+    elAcc.appendChild(volver); elAcc.appendChild(accion); elAcc.appendChild(cerrarB);
+  }
+}
+document.getElementById("dialogo-fondo").addEventListener("click", (e)=>{
+  if(e.target.id === "dialogo-fondo") cerrarDialogo();
+});
+
+let toastTimeout = null;
+function mostrarToast(texto){
+  const t = document.getElementById("toast");
+  t.textContent = texto; t.classList.add("visible");
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(()=> t.classList.remove("visible"), 2600);
+}
+
+/* ============================================================
+   9. CÁMARA Y CONTROLES
+   ============================================================ */
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const camara = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+camara.position.set(10, 6, -4);
+
+const controlesOrbita = new OrbitControls(camara, renderer.domElement);
+controlesOrbita.enableDamping = true;
+controlesOrbita.minDistance = 3;
+controlesOrbita.maxDistance = 32;
+controlesOrbita.maxPolarAngle = Math.PI*0.49;
+controlesOrbita.target.set(cfg.anchoX/2, 1, cfg.profundoZ/2);
+controlesOrbita.enabled = false;
+
+let modoCamara = "tercera"; // "tercera" | "orbita"
+let azimutCamara = Math.PI; // ángulo alrededor del avatar en 3ª persona
+
+function actualizarBotonCamara(){
+  const b = document.getElementById("btn-camara");
+  b.textContent = "Cámara: " + (modoCamara==="tercera" ? "3ª persona" : "Órbita libre");
+  b.setAttribute("aria-pressed", modoCamara==="orbita");
+}
+document.getElementById("btn-camara").addEventListener("click", ()=>{
+  modoCamara = modoCamara==="tercera" ? "orbita" : "tercera";
+  controlesOrbita.enabled = modoCamara==="orbita";
+  if(modoCamara==="orbita"){ controlesOrbita.target.copy(avatar.position).add(new THREE.Vector3(0,1,0)); }
+  actualizarBotonCamara();
+});
+actualizarBotonCamara();
+
+// arrastre manual en modo 3ª persona para orbitar alrededor del avatar
+let arrastrando = false, ultimoPX = 0;
+renderer.domElement.addEventListener("pointerdown", e=>{
+  if(modoCamara!=="tercera") return;
+  if(e.target !== renderer.domElement) return;
+  arrastrando = true; ultimoPX = e.clientX;
+});
+window.addEventListener("pointerup", ()=> arrastrando = false);
+window.addEventListener("pointermove", e=>{
+  if(arrastrando && modoCamara==="tercera"){
+    azimutCamara -= (e.clientX-ultimoPX)*0.006;
+    ultimoPX = e.clientX;
+  }
+});
+
+/* teclado */
+const teclas = {};
+window.addEventListener("keydown", e=>{
+  teclas[e.key.toLowerCase()] = true;
+  if(e.key.toLowerCase()==="f") alternarPantallaCompleta();
+  if(e.key.toLowerCase()==="h") alternarAyuda();
+});
+window.addEventListener("keyup", e=> teclas[e.key.toLowerCase()] = false);
+
+function alternarPantallaCompleta(){
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen().catch(()=>{});
+}
+function alternarAyuda(){ document.getElementById("panel-ayuda").classList.toggle("oculto"); }
+document.getElementById("btn-ayuda-toggle").addEventListener("click", alternarAyuda);
+document.getElementById("ayuda-cerrar").addEventListener("click", alternarAyuda);
+
+/* joystick virtual (móvil) */
+const esMovil = matchMedia("(pointer:coarse)").matches;
+const joyEl = document.getElementById("joystick"), joyPalo = document.getElementById("joystick-palo");
+let joyVec = {x:0,y:0}, joyActivo = false, joyId = null;
+if(esMovil){
+  joyEl.classList.add("activo");
+  joyEl.addEventListener("pointerdown", e=>{ joyActivo=true; joyId=e.pointerId; joyEl.setPointerCapture(e.pointerId); });
+  joyEl.addEventListener("pointermove", e=>{
+    if(!joyActivo || e.pointerId!==joyId) return;
+    const r = joyEl.getBoundingClientRect();
+    let dx = e.clientX - (r.left+r.width/2), dy = e.clientY - (r.top+r.height/2);
+    const max = r.width/2;
+    const len = Math.min(Math.hypot(dx,dy), max);
+    const ang = Math.atan2(dy,dx);
+    dx = Math.cos(ang)*len; dy = Math.sin(ang)*len;
+    joyPalo.style.transform = `translate(${dx-23}px, ${dy-23}px)`;
+    joyVec = { x: dx/max, y: dy/max };
+  });
+  const soltarJoy = e=>{ if(e.pointerId!==joyId) return; joyActivo=false; joyVec={x:0,y:0}; joyPalo.style.transform="translate(-50%,-50%)"; };
+  joyEl.addEventListener("pointerup", soltarJoy);
+  joyEl.addEventListener("pointercancel", soltarJoy);
+}
+
+/* ============================================================
+   10. INTERACCIÓN (click-to-move, colisiones, raycaster hover)
+   ============================================================ */
+const raycaster = new THREE.Raycaster();
+const puntero = new THREE.Vector2();
+const planoSuelo = new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshBasicMaterial({visible:false}));
+planoSuelo.rotation.x = -Math.PI/2;
+escena.add(planoSuelo);
+
+const objetosInteractivos = npcObjetos.map(n=>n.modelo);
+const elTooltip = document.getElementById("tooltip");
+let hoverActual = null;
+
+function alPuntero(e){
+  const r = renderer.domElement.getBoundingClientRect();
+  puntero.x = ((e.clientX-r.left)/r.width)*2-1;
+  puntero.y = -((e.clientY-r.top)/r.height)*2+1;
+  elTooltip.style.left = e.clientX+"px";
+  elTooltip.style.top = e.clientY+"px";
+}
+renderer.domElement.addEventListener("pointermove", alPuntero);
+
+renderer.domElement.addEventListener("click", e=>{
+  if(dialogoAbierto) return;
+  alPuntero(e);
+  raycaster.setFromCamera(puntero, camara);
+
+  // click sobre un NPC → abrir diálogo
+  const hitsNPC = raycaster.intersectObjects(objetosInteractivos, true);
+  if(hitsNPC.length){
+    let o = hitsNPC[0].object;
+    while(o && !o.userData.npcKey) o = o.parent;
+    if(o){ abrirDialogo(o.userData.npcKey); return; }
+  }
+
+  // click en el piso → click-to-move
+  const hitsSuelo = raycaster.intersectObject(planoSuelo);
+  if(hitsSuelo.length){
+    const p = hitsSuelo[0].point;
+    if(p.x>0.4 && p.x<cfg.anchoX-0.4 && p.z>0.4 && p.z<cfg.profundoZ-0.4){
+      estadoAvatar.destino = new THREE.Vector3(p.x,0,p.z);
+    }
+  }
+});
+
+function chocaAlgo(pos, radio=0.32){
+  const caja = new THREE.Box3(
+    new THREE.Vector3(pos.x-radio,0.1,pos.z-radio),
+    new THREE.Vector3(pos.x+radio,1.6,pos.z+radio)
+  );
+  for(const s of cajasSolidas){ if(s.intersectsBox(caja)) return true; }
+  return false;
+}
+
+function moverAvatar(delta){
+  if(dialogoAbierto) return;
+  const correr = teclas["shift"];
+  const vel = correr ? cfg.velCorrer : cfg.velCaminar;
+  let dx=0, dz=0;
+
+  // teclado: dirección relativa a cámara (adelante = donde mira la cámara)
+  const dirCam = new THREE.Vector3(); camara.getWorldDirection(dirCam); dirCam.y=0; dirCam.normalize();
+  const dirDer = new THREE.Vector3().crossVectors(dirCam, new THREE.Vector3(0,1,0)).multiplyScalar(-1);
+
+  let adelante=0, lateral=0;
+  if(teclas["w"]||teclas["arrowup"]) adelante+=1;
+  if(teclas["s"]||teclas["arrowdown"]) adelante-=1;
+  if(teclas["d"]||teclas["arrowright"]) lateral+=1;
+  if(teclas["a"]||teclas["arrowleft"]) lateral-=1;
+  if(joyVec.y) adelante -= joyVec.y;
+  if(joyVec.x) lateral += joyVec.x;
+
+  if(adelante || lateral){
+    estadoAvatar.destino = null; // el teclado tiene prioridad sobre el click-to-move
+    const mov = new THREE.Vector3().addScaledVector(dirCam, adelante).addScaledVector(dirDer, lateral);
+    if(mov.lengthSq()>0){ mov.normalize(); dx = mov.x*vel*delta; dz = mov.z*vel*delta; }
+  } else if(estadoAvatar.destino){
+    const hacia = new THREE.Vector3().subVectors(estadoAvatar.destino, avatar.position); hacia.y=0;
+    const dist = hacia.length();
+    if(dist > 0.12){
+      hacia.normalize();
+      dx = hacia.x*cfg.velCaminar*delta; dz = hacia.z*cfg.velCaminar*delta;
+    } else { estadoAvatar.destino = null; }
+  }
+
+  estadoAvatar.moviendo = !!(dx||dz);
+  if(estadoAvatar.moviendo){
+    const siguiente = new THREE.Vector3(avatar.position.x+dx,0,avatar.position.z+dz);
+    if(!chocaAlgo(siguiente)) avatar.position.copy(siguiente);
+    else {
+      // desliza sobre el eje libre si uno de los dos choca
+      const soloX = new THREE.Vector3(avatar.position.x+dx,0,avatar.position.z);
+      const soloZ = new THREE.Vector3(avatar.position.x,0,avatar.position.z+dz);
+      if(!chocaAlgo(soloX)) avatar.position.copy(soloX);
+      else if(!chocaAlgo(soloZ)) avatar.position.copy(soloZ);
+    }
+    const mirar = new THREE.Vector3(avatar.position.x+dx, avatar.position.y, avatar.position.z+dz);
+    if(mirar.distanceTo(avatar.position)>0.001) avatar.lookAt(mirar);
+  }
+  avatar.position.x = THREE.MathUtils.clamp(avatar.position.x, 0.4, cfg.anchoX-0.4);
+  avatar.position.z = THREE.MathUtils.clamp(avatar.position.z, 0.4, cfg.profundoZ-0.4);
+}
+
+function animarCaminata(modelo, t, velocidad, activo){
+  const partes = modelo.userData.partes;
+  if(activo){
+    const fase = t*velocidad*6;
+    partes.brazoI.rotation.x = Math.sin(fase)*0.55;
+    partes.brazoD.rotation.x = -Math.sin(fase)*0.55;
+    partes.piernaI.rotation.x = -Math.sin(fase)*0.6;
+    partes.piernaD.rotation.x = Math.sin(fase)*0.6;
+    partes.torso.position.y = 1.02 + Math.abs(Math.sin(fase))*0.03;
+  } else {
+    partes.brazoI.rotation.x = THREE.MathUtils.lerp(partes.brazoI.rotation.x,0,0.1);
+    partes.brazoD.rotation.x = THREE.MathUtils.lerp(partes.brazoD.rotation.x,0,0.1);
+    partes.piernaI.rotation.x = THREE.MathUtils.lerp(partes.piernaI.rotation.x,0,0.1);
+    partes.piernaD.rotation.x = THREE.MathUtils.lerp(partes.piernaD.rotation.x,0,0.1);
+    partes.torso.scale.y = 1 + Math.sin(t*1.6)*0.015; // respiración sutil
+  }
+}
+
+function moverPersonasAmbientales(delta, tGlobal){
+  personas.forEach(per=>{
+    if(per.sentado){
+      animarCaminata(per.modelo, tGlobal+per.t0, 1, false);
+      return;
+    }
+    if(tGlobal < per.pausaHasta){
+      animarCaminata(per.modelo, tGlobal, per.vel, false);
+      return;
+    }
+    const destino = per.puntos[per.idx];
+    const objetivo = new THREE.Vector3(destino[0],0,destino[1]);
+    const hacia = new THREE.Vector3().subVectors(objetivo, per.modelo.position); hacia.y=0;
+    const dist = hacia.length();
+    if(dist < 0.1){
+      per.idx = (per.idx+1) % per.puntos.length;
+      per.pausaHasta = tGlobal + 1 + Math.random()*2;
+      animarCaminata(per.modelo, tGlobal, per.vel, false);
+      return;
+    }
+    hacia.normalize();
+    const paso = per.vel*delta;
+    per.modelo.position.addScaledVector(hacia, Math.min(paso,dist));
+    const mirar = new THREE.Vector3().copy(per.modelo.position).addScaledVector(hacia,1);
+    per.modelo.lookAt(mirar);
+    animarCaminata(per.modelo, tGlobal, per.vel, true);
+  });
+}
+
+/* letrero de zona */
+let zonaAnterior = null, letreroTimeout = null;
+function actualizarLetreroZona(){
+  const zn = zonaDe(avatar.position.x, avatar.position.z);
+  if(zn && zn.id !== zonaAnterior){
+    zonaAnterior = zn.id;
+    const el = document.getElementById("letrero-zona");
+    el.textContent = zn.nombre.toUpperCase();
+    el.classList.add("visible");
+    clearTimeout(letreroTimeout);
+    letreroTimeout = setTimeout(()=> el.classList.remove("visible"), 2600);
+  }
+}
+
+/* apertura de diálogo por cercanía */
+function chequearCercaniaNPC(){
+  if(dialogoAbierto) return;
+  for(const n of npcObjetos){
+    if(avatar.position.distanceTo(n.pos) < cfg.radioInteraccionNPC){
+      abrirDialogo(n.key);
+      return;
+    }
+  }
+}
+
+/* raycaster hover sobre NPCs (cartelito con nombre) */
+function actualizarHover(){
+  raycaster.setFromCamera(puntero, camara);
+  const hits = raycaster.intersectObjects(objetosInteractivos, true);
+  if(hits.length){
+    let o = hits[0].object;
+    while(o && !o.userData.npcKey) o = o.parent;
+    if(o){
+      if(hoverActual !== o){
+        if(hoverActual) restaurarEmissive(hoverActual);
+        hoverActual = o; subirEmissive(o);
+      }
+      elTooltip.textContent = o.userData.nombre;
+      elTooltip.classList.add("visible");
+      return;
+    }
+  }
+  if(hoverActual){ restaurarEmissive(hoverActual); hoverActual = null; }
+  elTooltip.classList.remove("visible");
+}
+function subirEmissive(modelo){
+  modelo.traverse(o=>{ if(o.isMesh && o.material && "emissive" in o.material){
+    o.userData._emissivePrevio = o.material.emissiveIntensity ?? 0;
+    o.material.emissive = new THREE.Color(PAL.latonCalido);
+    o.material.emissiveIntensity = 0.35;
+  }});
+}
+function restaurarEmissive(modelo){
+  modelo.traverse(o=>{ if(o.isMesh && o.material && "emissive" in o.material){
+    o.material.emissiveIntensity = o.userData._emissivePrevio ?? 0;
+  }});
+}
+
+/* ============================================================
+   11. INTERFAZ (minimapa)
+   ============================================================ */
+const miniCanvas = document.getElementById("minimapa");
+const miniCtx = miniCanvas.getContext("2d");
+const miniEscala = miniCanvas.width / cfg.anchoX;
+
+function dibujarMinimapa(){
+  const w = miniCanvas.width, h = cfg.profundoZ*miniEscala;
+  miniCanvas.height = h;
+  miniCtx.clearRect(0,0,w,h);
+  miniCtx.fillStyle = "#20140c"; miniCtx.fillRect(0,0,w,h);
+
+  ZONAS.forEach(zn=>{
+    miniCtx.fillStyle = zn.piso;
+    miniCtx.globalAlpha = 0.9;
+    miniCtx.fillRect(zn.x[0]*miniEscala, zn.z[0]*miniEscala, ancho(zn.x)*miniEscala, ancho(zn.z)*miniEscala);
+  });
+  miniCtx.globalAlpha = 1;
+  miniCtx.strokeStyle = "rgba(0,0,0,.25)"; miniCtx.lineWidth = 1;
+  miniCtx.strokeRect(0,0,w,h);
+
+  // personas ambientales
+  personas.forEach(per=>{
+    miniCtx.fillStyle = "rgba(46,36,29,.75)";
+    miniCtx.beginPath();
+    miniCtx.arc(per.modelo.position.x*miniEscala, per.modelo.position.z*miniEscala, 2.2, 0, Math.PI*2);
+    miniCtx.fill();
+  });
+  // NPCs fijos
+  npcObjetos.forEach(n=>{
+    miniCtx.fillStyle = PAL.latonCalido;
+    miniCtx.beginPath();
+    miniCtx.arc(n.pos.x*miniEscala, n.pos.z*miniEscala, 2.8, 0, Math.PI*2);
+    miniCtx.fill();
+  });
+  // visitante
+  miniCtx.fillStyle = "#D9A441";
+  miniCtx.strokeStyle = "#fff"; miniCtx.lineWidth = 1.5;
+  miniCtx.beginPath();
+  miniCtx.arc(avatar.position.x*miniEscala, avatar.position.z*miniEscala, 4, 0, Math.PI*2);
+  miniCtx.fill(); miniCtx.stroke();
+}
+
+/* resize de ventana */
+function alRedimensionar(){
+  camara.aspect = window.innerWidth/window.innerHeight;
+  camara.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener("resize", alRedimensionar);
+alRedimensionar();
+
+/* ============================================================
+   12. BUCLE DE ANIMACIÓN
+   ============================================================ */
+function actualizarCamara(){
+  if(modoCamara==="tercera"){
+    const distancia = 4.6, altura = 2.6;
+    const offset = new THREE.Vector3(Math.sin(azimutCamara)*distancia, altura, Math.cos(azimutCamara)*distancia);
+    const objetivo = new THREE.Vector3().copy(avatar.position).add(offset);
+    camara.position.lerp(objetivo, 0.08);
+    const mirarA = new THREE.Vector3(avatar.position.x, avatar.position.y+1.15, avatar.position.z);
+    camara.lookAt(mirarA);
+  } else {
+    controlesOrbita.target.lerp(new THREE.Vector3(avatar.position.x,1,avatar.position.z), 0.03);
+    controlesOrbita.update();
+  }
+}
+
+let listo = false;
+function animar(){
+  requestAnimationFrame(animar);
+  const delta = Math.min(reloj.getDelta(), 0.05);
+  const t = reloj.getElapsedTime();
+
+  moverAvatar(delta);
+  animarCaminata(avatar, t, estadoAvatar.moviendo?1.35:1, estadoAvatar.moviendo);
+  moverPersonasAmbientales(delta, t);
+
+  npcObjetos.forEach(n=>{
+    n.indicador.position.y = 2.05 + Math.sin(t*1.6)*0.08;
+    n.indicador.rotation.y += delta*1.1;
+  });
+
+  actualizarLetreroZona();
+  chequearCercaniaNPC();
+  actualizarHover();
+  actualizarCamara();
+  dibujarMinimapa();
+
+  renderer.render(escena, camara);
+
+  if(!listo){ listo = true; finalizarCarga(); }
+}
+
+function finalizarCarga(){
+  paso(100,"Listo");
+  setTimeout(()=> document.getElementById("carga").classList.add("oculto"), 350);
+}
+
+paso(92,"Poblando el local…");
+requestAnimationFrame(()=>{ paso(98,"Últimos detalles…"); animar(); });
+
+/* ============================================================
+   LIMPIEZA DE RECURSOS
+   ============================================================ */
+window.addEventListener("beforeunload", ()=>{
+  escena.traverse(o=>{
+    if(o.isMesh){
+      o.geometry?.dispose();
+      if(Array.isArray(o.material)) o.material.forEach(m=>m.dispose());
+      else o.material?.dispose();
+    }
+  });
+  renderer.dispose();
+});
+</script>
+</body>
+</html>

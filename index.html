@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATE & CAFÉ | Cafetería de Especialidad & Boutique del Mate</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          coffee: '#5C4033',
+          coffeeDark: '#3E2A20',
+          yerba: '#3B5E2B',
+          yerbaLight: '#8BA870',
+          cream: '#FDFBF7',
+          creamAlt: '#EFEAE1',
+          creamDark: '#DFD7C8',
+          wood: '#C8B29B',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          body: ['Manrope', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Manrope', sans-serif;
+    color: #3E2A20;
+    background-color: #EFEAE1;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(139,168,112,0.35), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(200,178,155,0.45), transparent 50%),
+      radial-gradient(circle at 75% 70%, rgba(59,94,43,0.25), transparent 45%),
+      radial-gradient(circle at 20% 80%, rgba(92,64,51,0.25), transparent 50%),
+      linear-gradient(160deg, #FDFBF7 0%, #EFEAE1 45%, #DFD7C8 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  h1, h2, h3, .font-display { font-family: 'Fraunces', serif; }
+  .blob { position: fixed; border-radius: 9999px; filter: blur(70px); z-index: 0; pointer-events: none; }
+  .glass {
+    background: rgba(253, 251, 247, 0.45);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(62, 42, 32, 0.12);
+  }
+  .glass-dark {
+    background: rgba(62, 42, 32, 0.85);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(253, 251, 247, 0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+  .glass-yerba {
+    background: rgba(59, 94, 43, 0.35);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(253, 251, 247, 0.35);
+  }
+  .glass-card {
+    background: rgba(253, 251, 247, 0.55);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-5px);
+    background: rgba(253, 251, 247, 0.75);
+    box-shadow: 0 16px 40px rgba(62, 42, 32, 0.15);
+  }
+</style>
+</head>
+<body class="antialiased relative overflow-x-hidden">
+
+<div class="blob w-[28rem] h-[28rem] bg-yerbaLight/40 -top-24 -left-24"></div>
+<div class="blob w-[24rem] h-[24rem] bg-wood/50 top-1/4 -right-20"></div>
+
+<div class="relative z-10">
+
+<!-- NAV -->
+<header class="sticky top-3 z-40 px-3 sm:px-6 mt-3">
+  <nav class="max-w-7xl mx-auto glass rounded-full px-6 py-3 flex items-center justify-between">
+    <a href="#inicio" class="flex items-center gap-2">
+      <span class="text-3xl">🧉</span>
+      <div class="leading-none">
+        <span class="block font-display font-black text-xl text-coffeeDark">MATE <span class="text-yerba">&</span> CAFÉ</span>
+        <span class="block text-[10px] uppercase tracking-widest text-coffeeDark/70">Cafetería & Boutique</span>
+      </div>
+    </a>
+
+    <ul class="hidden lg:flex items-center gap-8 font-semibold text-sm text-coffeeDark">
+      <li><a href="#boutique" class="hover:text-yerba transition-colors">Boutique</a></li>
+      <li><a href="#arma-tu-mate" class="hover:text-yerba transition-colors">Armá tu Mate</a></li>
+      <li><a href="cafeteria.html#menu" class="hover:text-yerba transition-colors">Menú del Local</a></li>
+      <li><a href="#contacto" class="hover:text-yerba transition-colors">Contacto</a></li>
+    </ul>
+
+    <div class="flex items-center gap-2">
+      <div class="hidden sm:flex items-center gap-2">
+        <a href="cafeteria.html" class="flex items-center gap-1.5 glass text-coffeeDark px-3.5 py-2 rounded-full font-bold text-xs hover:bg-cream/60 transition-colors">
+          ☕ Cultivo
+        </a>
+        <a href="mate.html" class="flex items-center gap-1.5 glass text-coffeeDark px-3.5 py-2 rounded-full font-bold text-xs hover:bg-cream/60 transition-colors">
+          🧉 Yerbal
+        </a>
+      </div>
+      <button id="open-cart-btn" class="relative flex items-center gap-2 glass-yerba text-coffeeDark px-4 py-2 rounded-full font-bold text-sm transition-transform active:scale-95">
+        <span>🛒 Carrito</span>
+        <span id="cart-count" class="bg-yerba text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">0</span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<!-- HERO SECTION -->
+<section id="inicio" class="px-4 sm:px-6 py-16">
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+    <div class="glass rounded-[2rem] p-8 sm:p-10">
+      <span class="inline-block glass-yerba text-coffeeDark font-bold text-xs uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+        ☕ Café de especialidad + 🧉 Cultura del mate
+      </span>
+      <h1 class="font-display font-black text-4xl sm:text-6xl text-coffeeDark leading-tight mb-6">
+        El encuentro entre el <span class="text-yerba italic">mate</span> y el <span class="text-coffee">café</span>
+      </h1>
+      <p class="text-base text-coffeeDark/80 mb-8 leading-relaxed">
+        Disfrutá de nuestra pastelería artesanal y café de origen en nuestro local, o comprá kits de mate personalizados para llevarte la experiencia a tu casa.
+      </p>
+      <div class="flex flex-wrap gap-4">
+        <a href="#boutique" class="bg-yerba text-white font-bold px-7 py-3.5 rounded-full shadow-lg hover:bg-yerba/90 transition">
+          🧉 Ver Tienda Online
+        </a>
+        <button onclick="openCustomizer()" class="glass text-coffeeDark font-bold px-7 py-3.5 rounded-full hover:bg-cream transition">
+          ✨ Armá tu Kit Personalizado
+        </button>
+      </div>
+    </div>
+
+    <div class="aspect-square rounded-[2.5rem] glass-yerba flex items-center justify-center text-[10rem] shadow-xl">
+      🧉
+    </div>
+  </div>
+</section>
+
+<!-- ACCESO A LAS DOS EXPERIENCIAS -->
+<section class="px-4 sm:px-6 pb-4">
+  <div class="max-w-7xl mx-auto grid sm:grid-cols-2 gap-5">
+    <a href="cafeteria.html" class="glass-card rounded-[1.75rem] p-6 flex items-center gap-4 group">
+      <div class="w-16 h-16 shrink-0 rounded-2xl glass-yerba flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">☕</div>
+      <div>
+        <p class="text-yerba font-bold text-[11px] uppercase tracking-widest mb-0.5">Sentate con nosotros</p>
+        <p class="font-display font-black text-lg text-coffeeDark leading-tight">Conocé Cultivo</p>
+        <p class="text-xs text-coffeeDark/60 mt-0.5">Café de especialidad y pastelería →</p>
+      </div>
+    </a>
+    <a href="mate.html" class="glass-card rounded-[1.75rem] p-6 flex items-center gap-4 group">
+      <div class="w-16 h-16 shrink-0 rounded-2xl glass-yerba flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">🧉</div>
+      <div>
+        <p class="text-yerba font-bold text-[11px] uppercase tracking-widest mb-0.5">Llevate el ritual</p>
+        <p class="font-display font-black text-lg text-coffeeDark leading-tight">Conocé Yerbal</p>
+        <p class="text-xs text-coffeeDark/60 mt-0.5">Boutique de mates y yerbas →</p>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- BOUTIQUE CON FILTROS -->
+<section id="boutique" class="py-16 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto mb-8">
+      <span class="text-yerba font-bold text-xs uppercase tracking-widest">Tienda Online</span>
+      <h2 class="font-display font-black text-3xl sm:text-4xl text-coffeeDark mt-2">Boutique de Productos</h2>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex flex-wrap justify-center gap-2 mb-10" id="filter-buttons">
+      <button onclick="filterProducts('Todos')" class="filter-btn bg-yerba text-white px-5 py-2 rounded-full font-bold text-xs">Todos</button>
+      <button onclick="filterProducts('Mates')" class="filter-btn glass text-coffeeDark px-5 py-2 rounded-full font-bold text-xs hover:bg-cream">Mates</button>
+      <button onclick="filterProducts('Yerbas')" class="filter-btn glass text-coffeeDark px-5 py-2 rounded-full font-bold text-xs hover:bg-cream">Yerbas</button>
+      <button onclick="filterProducts('Termos')" class="filter-btn glass text-coffeeDark px-5 py-2 rounded-full font-bold text-xs hover:bg-cream">Termos</button>
+      <button onclick="filterProducts('Bombillas')" class="filter-btn glass text-coffeeDark px-5 py-2 rounded-full font-bold text-xs hover:bg-cream">Bombillas</button>
+    </div>
+
+    <div id="product-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+  </div>
+</section>
+
+<!-- BANNER PERSONALIZADOR -->
+<section id="arma-tu-mate" class="py-12 px-4 sm:px-6">
+  <div class="max-w-7xl mx-auto glass-dark rounded-[2.5rem] p-8 sm:p-12 text-center text-cream">
+    <h2 class="font-display font-black text-3xl sm:text-4xl mb-4">Experiencia "Armá tu Mate"</h2>
+    <p class="text-cream/80 max-w-xl mx-auto mb-8">Elegí tu mate, yerba, bombilla y accesorios paso a paso. Creá una combinación única para vos o para regalar.</p>
+    <button onclick="openCustomizer()" class="bg-yerbaLight text-coffeeDark font-extrabold px-8 py-4 rounded-full shadow-lg hover:bg-white transition">
+      🎨 Abrir Personalizador Interactivo
+    </button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer id="contacto" class="px-4 py-8">
+  <div class="max-w-7xl mx-auto glass-dark rounded-[2rem] p-8 text-cream/80 text-center text-xs">
+    <p class="font-display font-bold text-lg text-cream mb-2">MATE & CAFÉ</p>
+    <p class="mb-4">Av. Yerba Mate 1801, Palermo, CABA, Argentina</p>
+    <p>© 2026 MATE & CAFÉ. Todos los derechos reservados.</p>
+  </div>
+</footer>
+
+</div>
+
+<!-- MODAL PERSONALIZADOR "ARMÁ TU MATE" -->
+<div id="customizer-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+  <div class="glass-dark text-cream max-w-lg w-full rounded-3xl p-6 relative">
+    <button onclick="closeCustomizer()" class="absolute top-4 right-4 text-cream/60 hover:text-white text-xl font-bold">✕</button>
+
+    <h3 class="font-display font-bold text-2xl text-cream mb-1">Armá tu Kit Personalizado</h3>
+    <p class="text-xs text-cream/70 mb-6">Paso <span id="wizard-step-num">1</span> de 3</p>
+
+    <!-- Paso 1: Mate -->
+    <div id="step-1" class="wizard-step">
+      <h4 class="font-bold text-sm mb-3">1. Seleccioná el Mate:</h4>
+      <div class="space-y-2">
+        <label class="flex items-center justify-between p-3 glass rounded-xl cursor-pointer hover:bg-white/20">
+          <span class="text-sm font-semibold text-cream">Mate Imperial Algarrobo</span>
+          <input type="radio" name="wiz-mate" value="Mate Imperial Algarrobo" data-sku="mate-imperial-algarrobo" data-price="18500" checked class="accent-yerba">
+        </label>
+        <label class="flex items-center justify-between p-3 glass rounded-xl cursor-pointer hover:bg-white/20">
+          <span class="text-sm font-semibold text-cream">Mate Torpedo Calabaza</span>
+          <input type="radio" name="wiz-mate" value="Mate Torpedo Calabaza" data-sku="mate-torpedo-calabaza" data-price="12000" class="accent-yerba">
+        </label>
+      </div>
+    </div>
+
+    <!-- Paso 2: Yerba -->
+    <div id="step-2" class="wizard-step hidden">
+      <h4 class="font-bold text-sm mb-3">2. Seleccioná la Yerba:</h4>
+      <div class="space-y-2">
+        <label class="flex items-center justify-between p-3 glass rounded-xl cursor-pointer hover:bg-white/20">
+          <span class="text-sm font-semibold text-cream">Yerba Orgánica Suave 500g</span>
+          <input type="radio" name="wiz-yerba" value="Yerba Orgánica Suave" data-sku="yerba-organica-suave" data-price="4200" checked class="accent-yerba">
+        </label>
+        <label class="flex items-center justify-between p-3 glass rounded-xl cursor-pointer hover:bg-white/20">
+          <span class="text-sm font-semibold text-cream">Yerba con Hierbas Serranas</span>
+          <input type="radio" name="wiz-yerba" value="Yerba Hierbas Serranas" data-sku="yerba-hierbas-serranas" data-price="4100" class="accent-yerba">
+        </label>
+      </div>
+    </div>
+
+    <!-- Paso 3: Bombilla -->
+    <div id="step-3" class="wizard-step hidden">
+      <h4 class="font-bold text-sm mb-3">3. Seleccioná la Bombilla:</h4>
+      <div class="space-y-2">
+        <label class="flex items-center justify-between p-3 glass rounded-xl cursor-pointer hover:bg-white/20">
+          <span class="text-sm font-semibold text-cream">Bombilla Alpaca Clásica</span>
+          <input type="radio" name="wiz-bombilla" value="Bombilla Alpaca" data-sku="bombilla-alpaca-clasica" data-price="7300" checked class="accent-yerba">
+        </label>
+        <label class="flex items-center justify-between p-3 glass rounded-xl cursor-pointer hover:bg-white/20">
+          <span class="text-sm font-semibold text-cream">Bombilla Acero Cuchara</span>
+          <input type="radio" name="wiz-bombilla" value="Bombilla Acero" data-sku="bombilla-acero" data-price="5500" class="accent-yerba">
+        </label>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center mt-8 pt-4 border-t border-cream/20">
+      <button id="wiz-prev-btn" onclick="prevStep()" class="text-xs font-bold text-cream/50 hidden">← Anterior</button>
+      <button id="wiz-next-btn" onclick="nextStep()" class="ml-auto bg-yerba text-white text-xs font-bold px-6 py-2.5 rounded-full">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER DE CARRITO LATERAL -->
+<div id="cart-drawer" class="fixed inset-0 bg-black/50 z-50 hidden">
+  <div class="absolute right-0 top-0 h-full w-full max-w-md glass-dark text-cream p-6 flex flex-col justify-between">
+    <div>
+      <div class="flex justify-between items-center mb-6 border-b border-cream/20 pb-4">
+        <h3 class="font-display font-bold text-xl">Tu Carrito</h3>
+        <button onclick="closeCart()" class="text-cream/60 hover:text-white font-bold text-lg">✕</button>
+      </div>
+      <div id="cart-items" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2"></div>
+    </div>
+
+    <div class="border-t border-cream/20 pt-4">
+      <div class="flex justify-between font-bold text-lg mb-4">
+        <span>Total:</span>
+        <span id="cart-total">$0</span>
+      </div>
+      <button onclick="checkoutWhatsApp()" class="w-full bg-yerba text-white font-bold py-3.5 rounded-full hover:bg-yerba/90 transition">
+        📱 Pedir por WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/disponibilidad.js"></script>
+<script>
+  const products = [
+    { sku: 'mate-imperial-algarrobo', cat: 'Mates', icon: '🧉', name: 'Mate Imperial de Algarrobo', desc: 'Tallado a mano, virolado en alpaca.', price: 18500 },
+    { sku: 'mate-calabaza-curado', cat: 'Mates', icon: '🍐', name: 'Mate Calabaza Curado', desc: 'Curado tradicional, listo para usar.', price: 9800 },
+    { sku: 'yerba-organica-suave', cat: 'Yerbas', icon: '🌿', name: 'Yerba Orgánica Suave', desc: 'Sin palo, cultivo orgánico certificado.', price: 4200 },
+    { sku: 'yerba-palo-tradicional', cat: 'Yerbas', icon: '🍃', name: 'Yerba con Palo Tradicional', desc: 'Blend clásico de larga estacionada.', price: 3600 },
+    { sku: 'termo-acero-1l', cat: 'Termos', icon: '🧴', name: 'Termo Acero Inoxidable 1L', desc: 'Mantiene la temperatura 12+ horas.', price: 22900 },
+    { sku: 'bombilla-alpaca-clasica', cat: 'Bombillas', icon: '🥄', name: 'Bombilla de Alpaca Clásica', desc: 'Pico curvo, filtro removible.', price: 7300 },
+  ];
+
+  let cart = [];
+  let shown = products;
+  const fmt = n => n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+
+  function renderProducts(items) {
+    shown = items;
+    const grid = document.getElementById('product-grid');
+    grid.innerHTML = items.map((p) => `
+      <div class="glass-card relative rounded-[1.5rem] overflow-hidden flex flex-col p-5">
+        ${Disponibilidad.badge(p.sku)}
+        <div class="h-32 flex items-center justify-center text-5xl mb-3">${p.icon}</div>
+        <span class="self-start text-[10px] font-bold uppercase text-coffeeDark glass-yerba px-2.5 py-1 rounded-full mb-2">${p.cat}</span>
+        <h3 class="font-display font-bold text-coffeeDark text-base mb-1">${p.name}</h3>
+        <p class="text-xs text-coffeeDark/70 mb-4 flex-1">${p.desc}</p>
+        <div class="flex items-center justify-between mt-auto">
+          <span class="font-display font-black text-base text-coffeeDark">${fmt(p.price)}</span>
+          ${Disponibilidad.agotado(p.sku)
+            ? `<button disabled class="bg-coffeeDark/20 text-coffeeDark/60 font-bold text-xs px-4 py-2 rounded-full cursor-not-allowed">Sin stock</button>`
+            : `<button onclick="addToCart('${p.name}', ${p.price}, '${p.sku}')" class="bg-coffeeDark text-cream font-bold text-xs px-4 py-2 rounded-full hover:bg-yerba transition">
+            + Agregar
+          </button>`}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterProducts(cat) {
+    const btns = document.querySelectorAll('.filter-btn');
+    btns.forEach(b => b.classList.replace('bg-yerba', 'glass'));
+    event.target.classList.add('bg-yerba');
+    event.target.classList.remove('glass');
+
+    if (cat === 'Todos') renderProducts(products);
+    else renderProducts(products.filter(p => p.cat === cat));
+  }
+
+  function addToCart(name, price, skus) {
+    skus = [].concat(skus || []);
+    if (!Disponibilidad.puedeAgregar(skus, cart)) return alert('No hay más stock disponible de: ' + name);
+    cart.push({ name, price, skus });
+    updateCartUI();
+  }
+
+  function updateCartUI() {
+    document.getElementById('cart-count').innerText = cart.length;
+    const cartItemsEl = document.getElementById('cart-items');
+    let total = 0;
+
+    cartItemsEl.innerHTML = cart.map((item, idx) => {
+      total += item.price;
+      return `
+        <div class="flex justify-between items-center p-3 glass rounded-xl">
+          <div>
+            <p class="font-bold text-sm">${item.name}</p>
+            <p class="text-xs text-cream/70">${fmt(item.price)}</p>
+          </div>
+          <button onclick="removeFromCart(${idx})" class="text-red-400 font-bold text-xs">Quitar</button>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('cart-total').innerText = fmt(total);
+  }
+
+  function removeFromCart(idx) {
+    cart.splice(idx, 1);
+    updateCartUI();
+  }
+
+  // Controles de Carrito
+  document.getElementById('open-cart-btn').onclick = () => document.getElementById('cart-drawer').classList.remove('hidden');
+  function closeCart() { document.getElementById('cart-drawer').classList.add('hidden'); }
+
+  function checkoutWhatsApp() {
+    if (cart.length === 0) return alert('Tu carrito está vacío');
+    let msg = 'Hola MATE %26 CAFÉ, quiero encargar:%0A';
+    cart.forEach(i => msg += `- ${i.name} (${fmt(i.price)})%0A`);
+    window.open(`https://wa.me/5491100000000?text=${msg}`, '_blank');
+  }
+
+  // Wizard Personalizador
+  let currentStep = 1;
+  function openCustomizer() { document.getElementById('customizer-modal').classList.remove('hidden'); }
+  function closeCustomizer() { document.getElementById('customizer-modal').classList.add('hidden'); }
+
+  function nextStep() {
+    if (!document.querySelector(`#step-${currentStep} input:checked`)) return alert('No hay stock disponible para este paso del kit.');
+    if (currentStep < 3) {
+      document.getElementById(`step-${currentStep}`).classList.add('hidden');
+      currentStep++;
+      document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+      document.getElementById('wizard-step-num').innerText = currentStep;
+      document.getElementById('wiz-prev-btn').classList.remove('hidden');
+      if (currentStep === 3) document.getElementById('wiz-next-btn').innerText = 'Finalizar Kit ✨';
+    } else {
+      // Agregar Kit Armado al Carrito
+      const mate = document.querySelector('input[name="wiz-mate"]:checked');
+      const yerba = document.querySelector('input[name="wiz-yerba"]:checked');
+      const bombilla = document.querySelector('input[name="wiz-bombilla"]:checked');
+
+      const kitPrice = parseInt(mate.dataset.price) + parseInt(yerba.dataset.price) + parseInt(bombilla.dataset.price);
+      const skus = [mate.dataset.sku, yerba.dataset.sku, bombilla.dataset.sku];
+      if (!Disponibilidad.puedeAgregar(skus, cart)) return alert('No hay stock suficiente para este kit.');
+      addToCart(`Kit Personalizado (${mate.value} + ${yerba.value})`, kitPrice, skus);
+
+      closeCustomizer();
+      document.getElementById('cart-drawer').classList.remove('hidden');
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 1) {
+      document.getElementById(`step-${currentStep}`).classList.add('hidden');
+      currentStep--;
+      document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+      document.getElementById('wizard-step-num').innerText = currentStep;
+      if (currentStep === 1) document.getElementById('wiz-prev-btn').classList.add('hidden');
+      document.getElementById('wiz-next-btn').innerText = 'Siguiente →';
+    }
+  }
+
+  // Inicializar
+  renderProducts(products);
+  Disponibilidad.ready.then(() => { renderProducts(shown); Disponibilidad.marcarKit(); });
+</script>
+</body>
+</html>
