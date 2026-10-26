@@ -1,3 +1,3 @@
 Carpeta publica del sitio.
-Aca se guarda disponibilidad.json (lo genera stock/index.html con "Publicar disponibilidad").
+Aca se guarda disponibilidad.json (lo genera gestion/index.html con "Publicar disponibilidad").
 No pongas respaldos del stock aca: tienen costos.

@@ -1,0 +1,7 @@
+# Respaldos y exportaciones de la página de gestión: tienen costos, sueldos y DNI.
+# El repo es público, así que nunca deben subirse.
+gestion-mate-cafe-*.json
+stock-mate-cafe-*.json
+stock-mate-cafe-*.csv
+personal-respaldo-*.json
+nomina-*.csv

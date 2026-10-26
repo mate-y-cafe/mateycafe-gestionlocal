@@ -1,5 +1,5 @@
 /* Disponibilidad de productos en la tienda.
-   Lee data/disponibilidad.json (lo genera stock/index.html con "Publicar disponibilidad").
+   Lee data/disponibilidad.json (lo genera gestion/index.html con "Publicar disponibilidad").
    Si el archivo no existe o falla la lectura, la tienda funciona como siempre: todo disponible. */
 const Disponibilidad = (() => {
   const url = new URL('../data/disponibilidad.json', document.currentScript.src);

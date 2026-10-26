@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Gestión | MATE & CAFÉ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          coffee: '#5C4033',
+          coffeeDark: '#3E2A20',
+          yerba: '#3B5E2B',
+          yerbaLight: '#8BA870',
+          cream: '#FDFBF7',
+          creamAlt: '#EFEAE1',
+          creamDark: '#DFD7C8',
+          wood: '#C8B29B',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          body: ['Manrope', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  [x-cloak] { display: none !important; }
+  body {
+    font-family: 'Manrope', sans-serif;
+    color: #3E2A20;
+    background-color: #EFEAE1;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(139,168,112,0.35), transparent 45%),
+      radial-gradient(circle at 85% 15%, rgba(200,178,155,0.45), transparent 50%),
+      radial-gradient(circle at 75% 70%, rgba(59,94,43,0.25), transparent 45%),
+      linear-gradient(160deg, #FDFBF7 0%, #EFEAE1 45%, #DFD7C8 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  h1, h2, h3, .font-display { font-family: 'Fraunces', serif; }
+  .glass {
+    background: rgba(253, 251, 247, 0.55);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(62, 42, 32, 0.10);
+  }
+  .btn { font-weight: 700; font-size: .75rem; padding: .45rem .9rem; border-radius: 9999px; transition: all .2s; white-space: nowrap; }
+  .btn-primary { background: #3B5E2B; color: #fff; }
+  .btn-primary:hover { background: #2f4b22; }
+  .btn-ghost { background: rgba(253,251,247,.8); border: 1px solid rgba(92,64,51,.2); color: #3E2A20; }
+  .btn-ghost:hover { background: #fff; }
+  .btn-danger { background: #991B1B; color: #fff; }
+  .btn-danger:hover { background: #7f1d1d; }
+  .btn-xs { padding: .25rem .6rem; font-size: .7rem; }
+  .link-act { color: #3B5E2B; font-weight: 700; font-size: .75rem; }
+  .link-danger { color: #b3261e; font-weight: 700; font-size: .75rem; }
+  .link-act:hover, .link-danger:hover { text-decoration: underline; }
+  .subtab { font-weight: 700; font-size: .8rem; padding: .45rem .15rem; margin-right: 1.25rem; color: rgba(62,42,32,.6); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .subtab:hover { color: #3E2A20; }
+  .subtab.active { color: #3B5E2B; border-bottom-color: #3B5E2B; }
+  .chip { display: inline-block; font-size: .68rem; font-weight: 700; padding: .15rem .6rem; border-radius: 9999px; white-space: nowrap; }
+  .field { width: 100%; border: 1px solid rgba(92,64,51,.25); background: rgba(255,255,255,.85); border-radius: .75rem; padding: .55rem .75rem; font-size: .875rem; }
+  .field:focus { outline: 2px solid #8BA870; border-color: transparent; }
+  .lbl { display: block; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: rgba(62,42,32,.7); margin-bottom: .25rem; }
+  th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: rgba(62,42,32,.6); font-weight: 700; padding: .5rem .5rem; }
+  td { padding: .6rem .5rem; vertical-align: middle; }
+</style>
+</head>
+<body class="antialiased" x-data="gestionApp()" x-cloak>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+  <!-- ENCABEZADO -->
+  <header class="glass rounded-[2rem] px-6 py-4 flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">🧉</span>
+      <div class="leading-none">
+        <span class="block font-display font-black text-xl">MATE <span class="text-yerba">&</span> CAFÉ</span>
+        <span class="block text-[10px] uppercase tracking-widest text-coffeeDark/70">Gestión del local</span>
+      </div>
+    </div>
+    <nav class="flex flex-wrap gap-2" aria-label="Secciones">
+      <template x-for="s in [['resumen','Resumen'],['stock','Stock'],['personal','Personal'],['respaldo','Respaldo']]" :key="s[0]">
+        <button type="button" class="btn" :class="seccion === s[0] ? 'btn-primary' : 'btn-ghost'" @click="ir(s[0])" x-text="s[1]"></button>
+      </template>
+    </nav>
+    <a href="../index.html" class="text-xs font-bold text-coffeeDark/70 hover:text-yerba">← Ver el sitio</a>
+  </header>
+
+  <!-- AVISOS GLOBALES -->
+  <div class="space-y-3 mb-6">
+    <div x-show="errorGuardado" class="rounded-2xl bg-red-100 border border-red-300 text-red-900 px-5 py-3 text-sm font-semibold">
+      ⚠️ No se pudo guardar en este navegador. Descargá un respaldo ahora (sección “Respaldo”) para no perder los cambios.
+    </div>
+    <div x-show="st.backupVencido" class="rounded-2xl bg-amber-100 border border-amber-300 text-amber-900 px-5 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3">
+      <span>💾 Hace <span x-text="st.diasSinBackup"></span> días que no descargás un respaldo. Si se borran los datos del navegador, se pierde todo (stock y personal).</span>
+      <button type="button" class="btn btn-primary" @click="exportarTodo()">Descargar respaldo</button>
+    </div>
+  </div>
+
+  <!-- ============ RESUMEN ============ -->
+  <section x-show="seccion === 'resumen'" class="space-y-8">
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display font-black text-2xl">Stock</h2>
+        <button type="button" class="link-act" @click="ir('stock')">Ir a Stock →</button>
+      </div>
+      <div class="space-y-3 mb-4">
+        <div x-show="st.log && st.log.length === 0" class="rounded-2xl bg-yerbaLight/30 border border-yerba/30 px-5 py-3 text-sm">
+          👋 <strong>Primer conteo:</strong> todo arranca en 0. Contá lo que tenés y cargalo con el botón <strong>Ajuste</strong> de cada fila en Stock. Hasta entonces la tienda mostrará todo como “Sin stock” si publicás.
+        </div>
+        <div x-show="st.pubPending && st.log && st.log.length > 0" class="rounded-2xl bg-yerbaLight/30 border border-yerba/30 px-5 py-3 text-sm flex flex-wrap items-center justify-between gap-3">
+          <span>🛒 Hay cambios de stock sin publicar en la tienda online.</span>
+          <button type="button" class="btn btn-ghost" @click="ir('stock', 'tienda')">Ir a publicar</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">Sin stock</p>
+          <p class="font-display font-black text-3xl text-red-800" x-text="st.nAgotados ?? 0"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">Bajo mínimo</p>
+          <p class="font-display font-black text-3xl text-amber-700" x-text="st.nBajos ?? 0"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">Valor a costo</p>
+          <p class="font-display font-black text-3xl" x-text="fmt(st.valorStock)"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5 flex flex-col justify-between gap-2">
+          <p class="lbl">Para reponer</p>
+          <button type="button" class="btn btn-primary" @click="st.copiarReponer()">📋 Copiar lista (<span x-text="st.reponer ? st.reponer.length : 0"></span>)</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-display font-black text-2xl">Personal</h2>
+        <button type="button" class="link-act" @click="ir('personal')">Ir a Personal →</button>
+      </div>
+      <div x-show="pe.nLicPendientes > 0" class="rounded-2xl bg-amber-100 border border-amber-300 text-amber-900 px-5 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3 mb-4">
+        <span>⏳ Hay <span x-text="pe.nLicPendientes"></span> solicitud(es) de licencia pendiente(s).</span>
+        <button type="button" class="btn btn-ghost" @click="ir('personal', 'licencias')">Revisar</button>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">👥 Empleados activos</p>
+          <p class="font-display font-black text-3xl" x-text="pe.nActivos ?? 0"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">🟢 Presentes ahora</p>
+          <p class="font-display font-black text-3xl text-yerba" x-text="pe.nPresentes ?? 0"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">🌴 En licencia hoy</p>
+          <p class="font-display font-black text-3xl" x-text="pe.nEnLicencia ?? 0"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">💰 Nómina estimada del mes</p>
+          <p class="font-display font-black text-xl sm:text-3xl" x-text="fmt(pe.nominaMes)"></p>
+        </div>
+      </div>
+      <div class="glass rounded-[2rem] p-6">
+        <h3 class="font-display font-bold text-lg mb-3">Equipo de hoy</h3>
+        <div class="overflow-x-auto" x-show="pe.equipoHoy && pe.equipoHoy.length > 0">
+          <table class="w-full text-sm">
+            <thead><tr><th>Empleado</th><th>Puesto</th><th>Turno</th><th>Estado</th></tr></thead>
+            <tbody>
+              <template x-for="r in (pe.equipoHoy || [])" :key="r.e.id">
+                <tr class="border-t border-coffee/10">
+                  <td class="font-bold" x-text="r.e.nombre"></td>
+                  <td x-text="r.e.puesto"></td>
+                  <td><span class="chip" :class="r.turno.c" x-text="r.turno.n"></span> <span class="text-xs text-coffeeDark/50" x-text="r.turno.h"></span></td>
+                  <td><span class="chip" :class="r.est.cls" x-text="r.est.txt"></span></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <p x-show="!pe.equipoHoy || pe.equipoHoy.length === 0" class="text-sm text-coffeeDark/60 text-center py-6">
+          Sin empleados activos. <button type="button" class="link-act" @click="ir('personal')">Cargar el personal</button>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STOCK ============ -->
+  <section x-show="seccion === 'stock'" x-data="stockApp()" @keydown.escape.window="mov.open = false; edit.open = false">
+    <nav class="flex overflow-x-auto mb-5 border-b border-coffee/10" aria-label="Stock">
+      <template x-for="t in [['inventario','Inventario'],['historial','Historial y mermas'],['tienda','Tienda online']]" :key="t[0]">
+        <button type="button" class="subtab" :class="{ active: tab === t[0] }" @click="tab = t[0]" x-text="t[1]"></button>
+      </template>
+    </nav>
+
+    <div class="space-y-3 mb-6">
+      <div x-show="log.length === 0 && tab === 'inventario'" class="rounded-2xl bg-yerbaLight/30 border border-yerba/30 px-5 py-3 text-sm">
+        👋 <strong>Primer conteo:</strong> todo arranca en 0. Contá lo que tenés y cargalo con el botón <strong>Ajuste</strong> de cada fila. Hasta entonces la tienda mostrará todo como “Sin stock” si publicás.
+      </div>
+      <div x-show="pubPending && log.length > 0 && tab !== 'tienda'" class="rounded-2xl bg-yerbaLight/30 border border-yerba/30 px-5 py-3 text-sm flex flex-wrap items-center justify-between gap-3">
+        <span>🛒 Hay cambios de stock sin publicar en la tienda online.</span>
+        <button type="button" class="btn btn-ghost" @click="tab = 'tienda'">Ir a publicar</button>
+      </div>
+    </div>
+
+    <!-- INVENTARIO -->
+    <div x-show="tab === 'inventario'">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">Sin stock</p>
+          <p class="font-display font-black text-3xl text-red-800" x-text="nAgotados"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">Bajo mínimo</p>
+          <p class="font-display font-black text-3xl text-amber-700" x-text="nBajos"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5">
+          <p class="lbl">Valor a costo</p>
+          <p class="font-display font-black text-3xl" x-text="fmt(valorStock)"></p>
+        </div>
+        <div class="glass rounded-[1.5rem] p-5 flex flex-col justify-between gap-2">
+          <p class="lbl">Para reponer</p>
+          <button type="button" class="btn btn-primary" @click="copiarReponer()">📋 Copiar lista (<span x-text="reponer.length"></span>)</button>
+        </div>
+      </div>
+
+      <div class="glass rounded-[2rem] p-5">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <input type="search" class="field max-w-xs" placeholder="Buscar producto o código…" x-model="q" aria-label="Buscar">
+          <div class="flex flex-wrap gap-2">
+            <template x-for="f in [['todo','Todo'],['venta','Para la venta'],['insumo','Insumos del local'],['bajo','Bajo mínimo']]" :key="f[0]">
+              <button type="button" class="btn" :class="filtro === f[0] ? 'btn-primary' : 'btn-ghost'" @click="filtro = f[0]" x-text="f[1]"></button>
+            </template>
+          </div>
+          <button type="button" class="btn btn-primary ml-auto" @click="nuevoItem()">+ Nuevo ítem</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Precio</th><th>Movimientos</th></tr>
+            </thead>
+            <tbody>
+              <template x-for="it in filtered" :key="it.sku">
+                <tr class="border-t border-coffee/10">
+                  <td>
+                    <div class="font-bold" x-text="it.nombre"></div>
+                    <div class="text-[11px] text-coffeeDark/50" x-text="it.sku"></div>
+                  </td>
+                  <td class="text-coffeeDark/80" x-text="it.categoria || '—'"></td>
+                  <td class="whitespace-nowrap">
+                    <span class="font-display font-black text-lg" x-text="fq(it.qty)"></span>
+                    <span class="text-xs text-coffeeDark/60" x-text="it.unidad"></span>
+                    <span class="ml-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" :class="badgeClass(it)" x-text="badgeText(it)"></span>
+                  </td>
+                  <td x-text="fq(it.minimo)"></td>
+                  <td x-text="it.costo ? fmt(it.costo) : '—'"></td>
+                  <td x-text="it.tipo === 'producto' ? fmt(it.precio) : '—'"></td>
+                  <td>
+                    <div class="flex flex-wrap gap-1.5">
+                      <button type="button" class="btn btn-ghost btn-xs" @click="abrirMov(it, 'compra')">+ Compra</button>
+                      <button type="button" class="btn btn-ghost btn-xs" @click="abrirMov(it, it.tipo === 'producto' ? 'venta' : 'uso')" x-text="'− ' + (it.tipo === 'producto' ? 'Venta' : 'Uso')"></button>
+                      <button type="button" class="btn btn-ghost btn-xs" @click="abrirMov(it, 'merma')">Merma</button>
+                      <button type="button" class="btn btn-ghost btn-xs" @click="abrirMov(it, 'ajuste')">Ajuste</button>
+                      <button type="button" class="btn btn-ghost btn-xs" @click="editarItem(it)">Editar</button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <p x-show="filtered.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">No hay ítems que coincidan.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL Y MERMAS -->
+    <div x-show="tab === 'historial'" class="space-y-6">
+      <div class="glass rounded-[2rem] p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="font-display font-black text-xl">Mermas y pérdidas</h2>
+          <div class="flex gap-2">
+            <button type="button" class="btn" :class="mermaPeriodo === 'mes' ? 'btn-primary' : 'btn-ghost'" @click="mermaPeriodo = 'mes'">Este mes</button>
+            <button type="button" class="btn" :class="mermaPeriodo === 'todo' ? 'btn-primary' : 'btn-ghost'" @click="mermaPeriodo = 'todo'">Todo</button>
+          </div>
+        </div>
+        <p class="text-sm text-coffeeDark/70 mb-3">Pérdida total a costo: <strong class="text-red-800" x-text="fmt(mermas.total)"></strong></p>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <template x-for="m in mermas.filas" :key="m.motivo">
+            <div class="rounded-2xl bg-white/60 border border-coffee/10 p-4">
+              <p class="lbl" x-text="MOTIVOS[m.motivo] || m.motivo"></p>
+              <p class="font-display font-black text-xl" x-text="fmt(m.valor)"></p>
+              <p class="text-xs text-coffeeDark/60"><span x-text="m.eventos"></span> registro(s)</p>
+            </div>
+          </template>
+        </div>
+        <p x-show="mermas.filas.length === 0" class="text-sm text-coffeeDark/60">Sin mermas registradas en este período.</p>
+        <p class="text-xs text-coffeeDark/50 mt-3">El valor usa el costo cargado en el producto al momento de la merma. Si el costo es 0, la pérdida figura en $0.</p>
+      </div>
+
+      <div class="glass rounded-[2rem] p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="font-display font-black text-xl">Movimientos</h2>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="f in [['todo','Todos'],['compra','Compras'],['venta','Ventas'],['uso','Usos'],['merma','Mermas'],['ajuste','Ajustes']]" :key="f[0]">
+              <button type="button" class="btn" :class="logFiltro === f[0] ? 'btn-primary' : 'btn-ghost'" @click="logFiltro = f[0]" x-text="f[1]"></button>
+            </template>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Detalle</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="e in logFiltrado" :key="e.id">
+                <tr class="border-t border-coffee/10" :class="e.undone ? 'opacity-50 line-through' : ''">
+                  <td class="whitespace-nowrap text-coffeeDark/70" x-text="fechaHora(e.ts)"></td>
+                  <td class="font-bold" x-text="nombreDe(e.sku)"></td>
+                  <td x-text="TIPOS[e.tipo] ? TIPOS[e.tipo].label : e.tipo"></td>
+                  <td class="whitespace-nowrap font-bold" :class="e.cantidad < 0 ? 'text-red-800' : 'text-yerba'" x-text="(e.cantidad > 0 ? '+' : '') + fq(e.cantidad) + ' ' + unidadDe(e.sku)"></td>
+                  <td class="text-coffeeDark/70" x-text="[e.motivo ? MOTIVOS[e.motivo] : '', e.nota].filter(Boolean).join(' · ')"></td>
+                  <td class="text-right">
+                    <button type="button" class="btn btn-ghost btn-xs" x-show="!e.undone" @click="deshacer(e)">Deshacer</button>
+                    <span x-show="e.undone" class="text-xs no-underline">deshecho</span>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <p x-show="logFiltrado.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">Todavía no hay movimientos.</p>
+        </div>
+        <p class="text-xs text-coffeeDark/50 mt-3">Se muestran los últimos 200. El sistema guarda los últimos 1000 movimientos.</p>
+      </div>
+    </div>
+
+    <!-- TIENDA ONLINE -->
+    <div x-show="tab === 'tienda'" class="max-w-2xl">
+      <div class="glass rounded-[2rem] p-6">
+        <h2 class="font-display font-black text-xl mb-1">🛒 Publicar disponibilidad en la tienda</h2>
+        <p class="text-sm text-coffeeDark/70 mb-4">Genera <code>disponibilidad.json</code> con la cantidad y el estado de cada producto <strong>para la venta</strong>. No incluye costos ni precios.</p>
+        <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+          <div class="rounded-2xl bg-white/60 p-3"><p class="font-display font-black text-2xl text-yerba" x-text="previewPublicacion.ok"></p><p class="lbl">Disponibles</p></div>
+          <div class="rounded-2xl bg-white/60 p-3"><p class="font-display font-black text-2xl text-amber-700" x-text="previewPublicacion.ultimas"></p><p class="lbl">Últimas</p></div>
+          <div class="rounded-2xl bg-white/60 p-3"><p class="font-display font-black text-2xl text-red-800" x-text="previewPublicacion.agotado"></p><p class="lbl">Sin stock</p></div>
+        </div>
+        <button type="button" class="btn btn-primary w-full py-2.5 mb-3" @click="publicar()">Publicar disponibilidad</button>
+        <ol class="text-xs text-coffeeDark/70 list-decimal pl-5 space-y-1">
+          <li>Guardá el archivo en la carpeta <code>data/</code> del sitio, reemplazando el anterior (el navegador recuerda esa carpeta la próxima vez).</li>
+          <li>Si el sitio está publicado en internet, subí también ese archivo.</li>
+        </ol>
+        <p class="text-xs text-coffeeDark/60 mt-3" x-show="lastPublished">Última publicación: <span x-text="fechaHora(lastPublished)"></span></p>
+      </div>
+    </div>
+
+    <!-- MODAL: MOVIMIENTO -->
+    <div :class="mov.open ? 'flex' : 'hidden'" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" @click.self="mov.open = false">
+      <form class="bg-cream rounded-3xl p-6 w-full max-w-md shadow-2xl" @submit.prevent="confirmarMov()">
+        <h3 class="font-display font-black text-xl mb-1" x-text="TIPOS[mov.tipo].label + ' · ' + movItem.nombre"></h3>
+        <p class="text-xs text-coffeeDark/60 mb-4">Stock actual: <strong x-text="fq(movItem.qty) + ' ' + movItem.unidad"></strong></p>
+
+        <label class="lbl" x-text="mov.tipo === 'ajuste' ? 'Cantidad contada (lo que hay realmente)' : 'Cantidad (' + movItem.unidad + ')'"></label>
+        <input type="number" min="0" step="any" inputmode="decimal" class="field mb-3" x-model="mov.cantidad" x-ref="movCantidad">
+
+        <div x-show="mov.tipo === 'compra'" class="mb-3">
+          <label class="lbl">Costo por unidad (opcional)</label>
+          <input type="number" min="0" step="any" inputmode="decimal" class="field" x-model="mov.costo">
+        </div>
+        <div x-show="mov.tipo === 'merma'" class="mb-3">
+          <label class="lbl">Motivo</label>
+          <select class="field" x-model="mov.motivo">
+            <template x-for="(nombre, clave) in MOTIVOS" :key="clave"><option :value="clave" x-text="nombre"></option></template>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="lbl">Nota (opcional)</label>
+          <input type="text" maxlength="120" class="field" x-model="mov.nota">
+        </div>
+
+        <p class="text-sm font-semibold text-red-800 mb-3" x-show="mov.error" x-text="mov.error"></p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="btn btn-ghost" @click="mov.open = false">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- MODAL: ÍTEM -->
+    <div :class="edit.open ? 'flex' : 'hidden'" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" @click.self="edit.open = false">
+      <form class="bg-cream rounded-3xl p-6 w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto" @submit.prevent="guardarItem()">
+        <h3 class="font-display font-black text-xl mb-4" x-text="edit.nuevo ? 'Nuevo ítem' : 'Editar ítem'"></h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="lbl">Nombre</label>
+            <input type="text" class="field" x-model="edit.nombre" x-ref="editNombre">
+          </div>
+          <div>
+            <label class="lbl">Tipo</label>
+            <select class="field" x-model="edit.tipo" :disabled="!edit.nuevo">
+              <option value="producto">Para la venta</option>
+              <option value="insumo">Insumo del local</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Categoría</label>
+            <input type="text" class="field" x-model="edit.categoria">
+          </div>
+          <div>
+            <label class="lbl">Unidad</label>
+            <select class="field" x-model="edit.unidad">
+              <option value="u">unidades</option><option value="kg">kg</option><option value="g">g</option><option value="lt">litros</option><option value="ml">ml</option>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Stock mínimo</label>
+            <input type="number" min="0" step="any" class="field" x-model="edit.minimo">
+          </div>
+          <div>
+            <label class="lbl">Costo por unidad</label>
+            <input type="number" min="0" step="any" class="field" x-model="edit.costo">
+          </div>
+          <div x-show="edit.tipo === 'producto'">
+            <label class="lbl">Precio de venta</label>
+            <input type="number" min="0" step="any" class="field" x-model="edit.precio">
+          </div>
+          <template x-if="edit.nuevo">
+            <div class="col-span-2 grid grid-cols-2 gap-3">
+              <div>
+                <label class="lbl">Cantidad inicial</label>
+                <input type="number" min="0" step="any" class="field" x-model="edit.qtyInicial">
+              </div>
+              <div>
+                <label class="lbl">Código (SKU)</label>
+                <input type="text" class="field" x-model="edit.sku" placeholder="se genera del nombre">
+              </div>
+            </div>
+          </template>
+          <p class="col-span-2 text-xs text-coffeeDark/60" x-show="edit.tipo === 'producto'">El código es el que usa la tienda para vincular el producto (atributo <code>sku</code> en el sitio).</p>
+        </div>
+        <p class="text-sm font-semibold text-red-800 mt-3" x-show="edit.error" x-text="edit.error"></p>
+        <div class="flex items-center gap-2 pt-4">
+          <button type="button" class="btn btn-danger" x-show="!edit.nuevo" @click="eliminarItem()">Eliminar</button>
+          <button type="button" class="btn btn-ghost ml-auto" @click="edit.open = false">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ PERSONAL ============ -->
+  <section x-show="seccion === 'personal'" x-data="personalApp()" @keydown.escape.window="emp.open = false">
+    <nav class="flex overflow-x-auto mb-5 border-b border-coffee/10" aria-label="Personal">
+      <template x-for="t in [['empleados','Empleados'],['turnos','Turnos'],['asistencia','Asistencia'],['licencias','Licencias'],['nomina','Nómina']]" :key="t[0]">
+        <button type="button" class="subtab" :class="{ active: tab === t[0] }" @click="tab = t[0]" x-text="t[1]"></button>
+      </template>
+    </nav>
+
+    <!-- EMPLEADOS -->
+    <div x-show="tab === 'empleados'" class="glass rounded-[2rem] p-5">
+      <div class="flex flex-wrap items-end gap-3 mb-4">
+        <div class="flex-1 min-w-[180px]">
+          <label class="lbl">Buscar</label>
+          <input type="search" class="field" placeholder="Nombre, DNI o puesto" x-model="empQuery">
+        </div>
+        <div>
+          <label class="lbl">Área</label>
+          <select class="field" x-model="empArea">
+            <option value="">Todas</option><option>Cafetería</option><option>Boutique</option><option>Cocina</option><option>Salón</option><option>Administración</option>
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary" @click="abrirEmpleado()">+ Nuevo empleado</button>
+      </div>
+
+      <div x-show="db.employees.length === 0" class="text-center py-6">
+        <p class="mb-3 font-semibold">Todavía no hay empleados cargados.</p>
+        <button type="button" class="btn btn-primary" @click="abrirEmpleado()">+ Agregar el primero</button>
+        <button type="button" class="btn btn-ghost ml-2" @click="cargarEjemplo()">Cargar datos de ejemplo</button>
+      </div>
+
+      <div class="overflow-x-auto" x-show="db.employees.length > 0">
+        <table class="w-full text-sm">
+          <thead><tr><th>Nombre</th><th>DNI</th><th>Puesto</th><th>Área</th><th>Ingreso</th><th>Pago</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <template x-for="e in empleadosFiltrados" :key="e.id">
+              <tr class="border-t border-coffee/10">
+                <td>
+                  <div class="font-bold" x-text="e.nombre"></div>
+                  <div class="text-[11px] text-coffeeDark/50" x-text="[e.telefono, e.email].filter(Boolean).join(' · ')"></div>
+                </td>
+                <td x-text="e.dni"></td>
+                <td x-text="e.puesto"></td>
+                <td x-text="e.area"></td>
+                <td class="whitespace-nowrap" x-text="fmtDate(e.ingreso)"></td>
+                <td class="whitespace-nowrap"><span x-text="fmt(e.monto)"></span><span class="text-xs text-coffeeDark/50" x-text="e.tipoPago === 'hora' ? ' /h' : ' /mes'"></span></td>
+                <td><span class="chip" :class="e.estado === 'activo' ? 'bg-green-200 text-green-900' : 'bg-stone-300 text-stone-700'" x-text="e.estado === 'activo' ? 'Activo' : 'Inactivo'"></span></td>
+                <td class="whitespace-nowrap text-right">
+                  <button type="button" class="link-act mr-3" @click="abrirEmpleado(e.id)">Editar</button>
+                  <button type="button" class="link-danger" @click="eliminarEmpleado(e.id)">Eliminar</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <p x-show="empleadosFiltrados.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">No hay empleados que coincidan.</p>
+      </div>
+    </div>
+
+    <!-- TURNOS -->
+    <div x-show="tab === 'turnos'" class="glass rounded-[2rem] p-5">
+      <h2 class="font-display font-black text-xl">Turnos semanales</h2>
+      <p class="text-xs text-coffeeDark/60 mb-4">Mañana 07:00–15:00 · Tarde 15:00–23:00</p>
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button type="button" class="btn btn-ghost" @click="weekStart = addDays(weekStart, -7)">← Anterior</button>
+        <button type="button" class="btn btn-ghost" @click="weekStart = mondayOf(todayStr())">Hoy</button>
+        <button type="button" class="btn btn-ghost" @click="weekStart = addDays(weekStart, 7)">Siguiente →</button>
+        <span class="font-bold text-sm ml-2" x-text="rangoSemana"></span>
+        <button type="button" class="btn btn-ghost ml-auto" @click="copiarSemana()">📋 Copiar semana anterior</button>
+      </div>
+      <div class="overflow-x-auto" x-show="activos.length > 0">
+        <table class="w-full text-sm">
+          <thead>
+            <tr>
+              <th>Empleado</th>
+              <template x-for="(d, i) in diasSemana" :key="d">
+                <th class="text-center" :class="d === hoy ? '!text-yerba' : ''"><span x-text="DIAS[i]"></span><br><span class="font-normal normal-case tracking-normal" x-text="etiquetaDia(d)"></span></th>
+              </template>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="e in activos" :key="e.id">
+              <tr class="border-t border-coffee/10">
+                <td class="whitespace-nowrap"><div class="font-bold" x-text="e.nombre"></div><div class="text-[11px] text-coffeeDark/50" x-text="e.puesto"></div></td>
+                <template x-for="d in diasSemana" :key="d">
+                  <td class="text-center">
+                    <span x-show="onLeave(e.id, d)" class="chip bg-purple-200 text-purple-900" :title="onLeave(e.id, d)?.tipo">🌴 Licencia</span>
+                    <select x-show="!onLeave(e.id, d)" class="field !w-auto !py-1 !px-2 text-xs font-semibold" :class="TURNOS[turnoDe(d, e.id)].c" :value="turnoDe(d, e.id)" @change="setTurno(d, e.id, $event.target.value)">
+                      <option value="">—</option><option value="M">Mañana</option><option value="T">Tarde</option><option value="F">Franco</option>
+                    </select>
+                  </td>
+                </template>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <p x-show="activos.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">Agregá empleados activos para armar los turnos.</p>
+    </div>
+
+    <!-- ASISTENCIA -->
+    <div x-show="tab === 'asistencia'" class="glass rounded-[2rem] p-5">
+      <h2 class="font-display font-black text-xl">Control de asistencia</h2>
+      <p class="text-xs text-coffeeDark/60 mb-4">Registro de entrada y salida por día</p>
+      <div class="flex flex-wrap items-end gap-2 mb-4">
+        <button type="button" class="btn btn-ghost" @click="attDate = addDays(attDate, -1)">←</button>
+        <div><label class="lbl">Fecha</label><input type="date" class="field" x-model="attDate"></div>
+        <button type="button" class="btn btn-ghost" @click="attDate = addDays(attDate, 1)">→</button>
+        <button type="button" class="btn btn-ghost" @click="attDate = todayStr()">Hoy</button>
+      </div>
+      <div class="overflow-x-auto" x-show="activos.length > 0">
+        <table class="w-full text-sm">
+          <thead><tr><th>Empleado</th><th>Turno</th><th>Entrada</th><th>Salida</th><th>Horas</th><th></th></tr></thead>
+          <tbody>
+            <template x-for="e in activos" :key="e.id">
+              <tr class="border-t border-coffee/10">
+                <td class="font-bold" x-text="e.nombre"></td>
+                <td><span class="chip" :class="TURNOS[turnoDe(attDate, e.id)].c" x-text="TURNOS[turnoDe(attDate, e.id)].n"></span></td>
+                <td colspan="4" x-show="onLeave(e.id, attDate)"><span class="chip bg-purple-200 text-purple-900" x-text="'🌴 ' + onLeave(e.id, attDate)?.tipo"></span></td>
+                <td x-show="!onLeave(e.id, attDate)"><input type="time" class="field !w-auto" :value="asistFor(e.id, attDate)?.entrada || ''" @change="setAsist(e.id, 'entrada', $event.target.value)"></td>
+                <td x-show="!onLeave(e.id, attDate)"><input type="time" class="field !w-auto" :value="asistFor(e.id, attDate)?.salida || ''" @change="setAsist(e.id, 'salida', $event.target.value)"></td>
+                <td x-show="!onLeave(e.id, attDate)" class="font-bold" x-text="horasDe(e.id) ? fmtH(horasDe(e.id)) : '—'"></td>
+                <td x-show="!onLeave(e.id, attDate)" class="whitespace-nowrap">
+                  <button type="button" class="link-act mr-3" @click="marcarAhora(e.id, 'entrada')">Entrada ahora</button>
+                  <button type="button" class="link-act" @click="marcarAhora(e.id, 'salida')">Salida ahora</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <p x-show="activos.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">No hay empleados activos.</p>
+      <p class="text-xs text-coffeeDark/50 mt-3">Si la salida es anterior a la entrada se asume que el turno cruza la medianoche.</p>
+    </div>
+
+    <!-- LICENCIAS -->
+    <div x-show="tab === 'licencias'" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div class="glass rounded-[2rem] p-6">
+        <h2 class="font-display font-black text-xl mb-3">Nueva solicitud</h2>
+        <form @submit.prevent="guardarAusencia()" class="space-y-3">
+          <div>
+            <label class="lbl">Empleado *</label>
+            <select class="field" required x-model="aus.empId">
+              <option value="">Elegir…</option>
+              <template x-for="e in activos" :key="e.id"><option :value="e.id" x-text="e.nombre"></option></template>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Tipo</label>
+            <select class="field" x-model="aus.tipo">
+              <option>Vacaciones</option><option>Enfermedad</option><option>Permiso con goce</option><option>Permiso sin goce</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="lbl">Desde *</label><input type="date" class="field" required x-model="aus.desde"></div>
+            <div><label class="lbl">Hasta *</label><input type="date" class="field" required x-model="aus.hasta"></div>
+          </div>
+          <div><label class="lbl">Motivo / nota</label><input type="text" class="field" maxlength="120" x-model="aus.motivo"></div>
+          <button type="submit" class="btn btn-primary w-full py-2.5">Registrar</button>
+        </form>
+      </div>
+      <div class="glass rounded-[2rem] p-6 lg:col-span-2">
+        <h2 class="font-display font-black text-xl mb-3">Historial</h2>
+        <div class="overflow-x-auto" x-show="db.ausencias.length > 0">
+          <table class="w-full text-sm">
+            <thead><tr><th>Empleado</th><th>Tipo</th><th>Período</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="a in ausenciasOrdenadas" :key="a.id">
+                <tr class="border-t border-coffee/10">
+                  <td><div class="font-bold" x-text="empName(a.empId)"></div><div class="text-[11px] text-coffeeDark/50" x-text="a.motivo"></div></td>
+                  <td x-text="a.tipo"></td>
+                  <td class="whitespace-nowrap"><span x-text="fmtDate(a.desde) + ' → ' + fmtDate(a.hasta)"></span><div class="text-[11px] text-coffeeDark/50" x-text="diasAus(a) + ' día(s)'"></div></td>
+                  <td><span class="chip" :class="STATUS_AUS[a.estado]" x-text="a.estado"></span></td>
+                  <td class="whitespace-nowrap text-right">
+                    <button type="button" class="link-act mr-2" x-show="a.estado !== 'aprobada'" @click="setAusEstado(a.id, 'aprobada')">Aprobar</button>
+                    <button type="button" class="link-act mr-2 !text-coffee" x-show="a.estado !== 'rechazada'" @click="setAusEstado(a.id, 'rechazada')">Rechazar</button>
+                    <button type="button" class="link-danger" @click="borrarAus(a.id)">Borrar</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <p x-show="db.ausencias.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">Sin solicitudes registradas.</p>
+      </div>
+    </div>
+
+    <!-- NÓMINA -->
+    <div x-show="tab === 'nomina'" class="glass rounded-[2rem] p-5">
+      <h2 class="font-display font-black text-xl">Nómina mensual</h2>
+      <p class="text-xs text-coffeeDark/60 mb-4">Estimación simple: sin cargas sociales ni retenciones impositivas</p>
+      <div class="flex flex-wrap items-end gap-3 mb-4">
+        <div><label class="lbl">Mes</label><input type="month" class="field" x-model="payMonth"></div>
+        <button type="button" class="btn btn-ghost ml-auto" @click="exportarNominaCSV()">⬇ Exportar CSV</button>
+      </div>
+      <div class="overflow-x-auto" x-show="activos.length > 0">
+        <table class="w-full text-sm">
+          <thead><tr><th>Empleado</th><th>Pago</th><th>Horas</th><th>Base</th><th>Sin goce</th><th>Extras</th><th>Descuentos</th><th>Total</th></tr></thead>
+          <tbody>
+            <template x-for="f in filasNomina" :key="f.e.id">
+              <tr class="border-t border-coffee/10">
+                <td><div class="font-bold" x-text="f.e.nombre"></div><div class="text-[11px] text-coffeeDark/50" x-text="f.e.puesto"></div></td>
+                <td class="whitespace-nowrap" x-text="f.e.tipoPago === 'hora' ? fmt(f.e.monto) + '/h' : 'Mensual'"></td>
+                <td class="whitespace-nowrap" x-text="fmtH(f.p.horas)"></td>
+                <td x-text="fmt(f.p.base)"></td>
+                <td class="text-red-700" x-text="f.p.sinGoce ? '−' + fmt(f.p.sinGoce) : '—'"></td>
+                <td><input type="number" min="0" class="field !w-28" :value="f.p.extras" @change="setAjuste(f.e.id, 'extras', $event)"></td>
+                <td><input type="number" min="0" class="field !w-28" :value="f.p.descuentos" @change="setAjuste(f.e.id, 'descuentos', $event)"></td>
+                <td class="font-display font-black" x-text="fmt(f.p.total)"></td>
+              </tr>
+            </template>
+          </tbody>
+          <tfoot>
+            <tr class="border-t border-coffee/10"><td colspan="7" class="text-right font-bold pt-3">Total del mes</td><td class="font-display font-black text-lg pt-3" x-text="fmt(totalNomina)"></td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <p x-show="activos.length === 0" class="text-center text-sm text-coffeeDark/60 py-8">No hay empleados activos.</p>
+      <p class="text-xs text-coffeeDark/50 mt-3">Por hora: horas registradas en Asistencia × valor hora. Mensual: sueldo fijo, menos 1/30 por cada día de “Permiso sin goce” aprobado.</p>
+    </div>
+
+    <!-- MODAL: EMPLEADO -->
+    <div :class="emp.open ? 'flex' : 'hidden'" class="fixed inset-0 bg-black/50 z-50 items-center justify-center p-4" @click.self="emp.open = false">
+      <form class="bg-cream rounded-3xl p-6 w-full max-w-2xl shadow-2xl max-h-[92vh] overflow-y-auto" @submit.prevent="guardarEmpleado()">
+        <h3 class="font-display font-black text-xl mb-4" x-text="emp.id ? 'Editar empleado' : 'Nuevo empleado'"></h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label class="lbl">Nombre completo *</label><input type="text" class="field" required maxlength="80" x-model="emp.nombre"></div>
+          <div><label class="lbl">DNI *</label><input type="text" class="field" required maxlength="12" inputmode="numeric" x-model="emp.dni"></div>
+          <div><label class="lbl">Puesto *</label><input type="text" class="field" required maxlength="60" placeholder="Barista, Cajero/a, Cocinero/a…" x-model="emp.puesto"></div>
+          <div>
+            <label class="lbl">Área</label>
+            <select class="field" x-model="emp.area"><option>Cafetería</option><option>Boutique</option><option>Cocina</option><option>Salón</option><option>Administración</option></select>
+          </div>
+          <div><label class="lbl">Fecha de ingreso *</label><input type="date" class="field" required x-model="emp.ingreso"></div>
+          <div>
+            <label class="lbl">Estado</label>
+            <select class="field" x-model="emp.estado"><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select>
+          </div>
+          <div>
+            <label class="lbl">Tipo de pago</label>
+            <select class="field" x-model="emp.tipoPago"><option value="mensual">Sueldo mensual</option><option value="hora">Por hora</option></select>
+          </div>
+          <div><label class="lbl">Monto (ARS) *</label><input type="number" min="0" step="1" class="field" required x-model="emp.monto"></div>
+          <div><label class="lbl">Teléfono</label><input type="text" class="field" maxlength="30" x-model="emp.telefono"></div>
+          <div><label class="lbl">Email</label><input type="email" class="field" maxlength="80" x-model="emp.email"></div>
+        </div>
+        <p class="text-sm font-semibold text-red-800 mt-3" x-show="emp.error" x-text="emp.error"></p>
+        <div class="flex justify-end gap-2 mt-6">
+          <button type="button" class="btn btn-ghost" @click="emp.open = false">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ RESPALDO ============ -->
+  <section x-show="seccion === 'respaldo'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="glass rounded-[2rem] p-6">
+      <h2 class="font-display font-black text-xl mb-1">💾 Respaldo de todo</h2>
+      <p class="text-sm text-coffeeDark/70 mb-4">Stock y personal viven en este navegador. Descargá un respaldo cada semana y guardalo <strong>fuera de la carpeta del sitio</strong> (contiene costos, sueldos y DNI).</p>
+      <div class="flex flex-wrap gap-2 mb-3">
+        <button type="button" class="btn btn-primary" @click="exportarTodo()">Descargar respaldo (JSON)</button>
+        <label class="btn btn-ghost cursor-pointer">Restaurar respaldo
+          <input type="file" accept="application/json,.json" class="hidden" @change="importarTodo($event)">
+        </label>
+      </div>
+      <p class="text-xs text-coffeeDark/60 mb-1">Último respaldo: <span x-text="st.lastBackup ? fechaHora(st.lastBackup) : 'nunca'"></span></p>
+      <p class="text-xs text-coffeeDark/60 mb-6">Al restaurar acepta este respaldo y también los archivos viejos de Stock o de Personal por separado.</p>
+
+      <h3 class="font-display font-bold text-sm mb-2">Exportar a Excel</h3>
+      <button type="button" class="btn btn-ghost" @click="st.exportarCSV()">Inventario (CSV)</button>
+      <p class="text-xs text-coffeeDark/60 mt-2">La nómina se exporta desde Personal → Nómina.</p>
+    </div>
+
+    <div class="glass rounded-[2rem] p-6">
+      <h3 class="font-display font-bold text-lg mb-1 text-red-900">Zona de cuidado</h3>
+      <p class="text-sm text-coffeeDark/70 mb-4">Estas acciones borran datos de este navegador y piden escribir BORRAR para confirmar. Descargá un respaldo antes.</p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="btn btn-danger" @click="st.reiniciar()">Reiniciar stock a los datos iniciales</button>
+        <button type="button" class="btn btn-danger" @click="pe.reiniciar()">Borrar todos los datos de personal</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- AVISO -->
+<div x-show="$store.mc.toastMsg" x-transition class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] bg-coffeeDark text-cream text-sm font-semibold px-5 py-3 rounded-full shadow-xl max-w-[90vw]" role="status" x-text="$store.mc.toastMsg"></div>
+
+<script src="comun.js"></script>
+<script src="stock.js"></script>
+<script src="personal.js"></script>
+</body>
+</html>

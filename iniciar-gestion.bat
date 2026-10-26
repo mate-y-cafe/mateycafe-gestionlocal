@@ -1,5 +1,5 @@
 @echo off
-title Mate y Cafe - Stock
+title Mate y Cafe - Gestion
 cd /d "%~dp0"
 set PY=
 where python >nul 2>nul && set PY=python
@@ -10,9 +10,9 @@ if not defined PY (
   exit /b 1
 )
 echo.
-echo  Sistema de stock en http://localhost:5500/stock/
+echo  Gestion del local (stock y personal) en http://localhost:5500/gestion/
 echo  Deja esta ventana abierta mientras lo uses. Cerrala para apagarlo.
 echo.
-start "" "http://localhost:5500/stock/"
+start "" "http://localhost:5500/gestion/"
 %PY% -m http.server 5500
 pause
